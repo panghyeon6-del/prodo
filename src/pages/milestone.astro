@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Placeholder from '../components/Placeholder.astro';
+import { ROUTES } from '../lib/site';
+
+const route = ROUTES.find((r) => r.key === 'milestone')!;
+const items = [
+  { year: '2024', title: 'Milestone A' },
+  { year: '2025', title: 'Milestone B' },
+  { year: '2026', title: 'Milestone C' },
+];
+---
+
+<Base route="milestone" title="Milestone">
+  <PageHead route={route} />
+  <ol class="timeline">
+    {items.map((m) => (
+      <li class="item" data-reveal>
+        <span class="t-label year">// {m.year}</span>
+        <h2 class="t-title">{m.title}</h2>
+        <Placeholder ratio="21/9" label={m.title} />
+      </li>
+    ))}
+  </ol>
+</Base>
+
+<style>
+  .timeline { list-style: none; padding: 0 var(--gutter) clamp(2rem, 6vw, 5rem); }
+  .item {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 2rem;
+    align-items: start;
+    padding-block: 2.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+  @media (max-width: 760px) {
+    .item { grid-template-columns: 1fr; gap: 1rem; }
+  }
+</style>

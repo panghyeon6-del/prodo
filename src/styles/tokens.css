@@ -1,0 +1,50 @@
+/*
+ * 디자인 토큰 — 고정 축(서체·굵기·격자·색)
+ * 위치·스케일은 페이지마다 자유 축.
+ */
+:root {
+  /* ── 색: 무채 + 유채 하나(빨강) ───────────────── */
+  --paper: #dcdad5;        /* 바탕 */
+  --paper-2: #cfcdc8;      /* 박스/플레이스홀더 */
+  --ink: #111111;          /* 글자·검정 블록 */
+  --ink-soft: #6f6e6a;     /* 비활성 라벨 */
+  --line: #9a9893;         /* 1px 격자선 */
+  --red: #d62f2a;          /* 유일한 강조색 */
+  --white: #f2f2f0;        /* 검정·빨강 위 글자 */
+
+  /* ── 서체: Pretendard 단독 ─────────────────────── */
+  --font: 'Pretendard Variable', Pretendard, -apple-system, 'Noto Sans KR', sans-serif;
+
+  /* 굵기: 한 화면 안에서 두 단계 이상 벌린다 → 900 / 700 / 500 만 사용 */
+  --w-display: 900;   /* 히어로 타이틀 */
+  --w-title: 700;     /* 카드·섹션 제목 (스택 블록 900+700) */
+  --w-text: 500;      /* 본문·라벨 (300 이하 금지) */
+
+  /* 크기: 1.333 수열 */
+  --fs-label: 0.75rem;                              /* 12 */
+  --fs-body: 1rem;                                  /* 16 */
+  --fs-lead: 1.333rem;                              /* 21 */
+  --fs-title: clamp(1.777rem, 2.6vw, 2.369rem);     /* 28 → 38 */
+  --fs-display: clamp(3.157rem, 11vw, 11rem);       /* 50 → 176 */
+
+  /* 자간·행간 */
+  --ls-display: -0.045em;
+  --lh-display: 0.86;
+  --ls-title: -0.035em;
+  --lh-title: 0.95;
+  --ls-label: 0.2em;      /* 대문자 마이크로 라벨: 넓게 벌려 배경을 들인다 */
+  --lh-label: 1.35;
+  --lh-body: 1.45;
+
+  /* ── 격자 ─────────────────────────────────────── */
+  --gutter: clamp(16px, 3.3vw, 60px);   /* 바깥 여백 */
+  --gap: 1px;                            /* 셀 사이 = 선 */
+  --cols: 12;
+
+  /* ── 모션 ─────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* expo out */
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --dur-fast: 180ms;
+  --dur: 480ms;
+  --dur-slow: 900ms;
+}

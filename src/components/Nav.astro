@@ -1,0 +1,122 @@
+---
+// 상단 고정 내비게이션 — 레퍼런스 2 의 타일형 메뉴.
+// 현재 페이지 타일은 빨강. 키보드 0~3 으로도 이동(scripts/motion.ts).
+import { ROUTES, SITE, url, type Route } from '../lib/site';
+
+interface Props { current: Route['key'] }
+const { current } = Astro.props;
+---
+
+<header class="nav" transition:persist="nav" transition:name="nav" transition:animate="none">
+  <a class="mark" href={url('/')} aria-label="홈으로">
+    <span class="mark-glyph">{SITE.mark}</span>
+    <span class="t-label mark-sub">Personal<br />Enhancement<br /><span class="dash">System</span></span>
+  </a>
+
+  <nav aria-label="주요 페이지">
+    <ul class="tiles">
+      {ROUTES.map((r) => (
+        <li>
+          <a
+            class="tile"
+            href={url(r.path)}
+            aria-current={r.key === current ? 'page' : undefined}
+            data-route={r.key}
+          >
+            <span class="t-label tile-no">{r.no}</span>
+            <span class="t-label tile-label">{r.label}</span>
+            <span class="tile-ko">{r.ko}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</header>
+
+<script>
+  // ClientRouter 로 nav 가 유지되므로 현재 표시를 이동마다 갱신
+  document.addEventListener('astro:page-load', () => {
+    const key = document.body.dataset.route;
+    document.querySelectorAll<HTMLAnchorElement>('.tile').forEach((a) => {
+      if (a.dataset.route === key) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+  });
+</script>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: stretch;
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .mark {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem var(--gutter);
+    border-right: 1px solid var(--line);
+  }
+  .mark-glyph {
+    font-weight: var(--w-display);
+    font-size: 2rem;
+    letter-spacing: -0.06em;
+    line-height: 1;
+  }
+
+  .tiles {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    height: 100%;
+    max-width: 52rem;
+    margin-left: auto;
+  }
+  .tile {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100%;
+    min-height: 5.5rem;
+    padding: 0.85rem 1rem;
+    border-left: 1px solid var(--line);
+    overflow: hidden;
+    isolation: isolate;
+    transition: color var(--dur-fast) linear;
+  }
+  /* 호버 시 빨강이 아래에서 차오름 */
+  .tile::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--ink);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .tile:hover { color: var(--white); }
+  .tile:hover::before { transform: scaleY(1); }
+  .tile[aria-current='page'] { color: var(--white); }
+  .tile[aria-current='page']::before { background: var(--red); transform: scaleY(1); }
+
+  .tile-no { opacity: 0.6; }
+  .tile-label { align-self: end; }
+  .tile-ko { font-size: var(--fs-label); opacity: 0.6; }
+
+  @media (max-width: 760px) {
+    .nav { grid-template-columns: 1fr; }
+    .mark { border-right: 0; border-bottom: 1px solid var(--line); padding-block: 0.75rem; }
+    .mark-sub { display: none; }
+    .tiles { max-width: none; margin: 0; }
+    .tile { min-height: 4rem; padding: 0.6rem 0.7rem; }
+    .tiles li:first-child .tile { border-left: 0; }
+    .tile-ko { display: none; }
+  }
+</style>

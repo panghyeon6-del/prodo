@@ -1,0 +1,60 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { SITE, type Route } from '../lib/site';
+
+interface Props {
+  route: Route['key'];
+  title?: string;
+  description?: string;
+}
+const { route, title, description = SITE.tagline } = Astro.props;
+const pageTitle = title ? `${title} — ${SITE.mark}` : `${SITE.mark} ${SITE.name}`;
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#dcdad5" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/favicon.svg`} />
+    <title>{pageTitle}</title>
+    <ClientRouter fallback="swap" />
+  </head>
+  <body data-route={route}>
+    <a class="skip sr-only" href="#main">본문으로 건너뛰기</a>
+    <Nav current={route} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      import '../scripts/motion';
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  /* 페이지 전환: 새 페이지가 아래에서 위로 닦이듯 덮는다 (nav 는 persist 로 고정) */
+  ::view-transition-old(root) {
+    animation: vt-out 420ms var(--ease-in-out) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-in 620ms var(--ease-out) both;
+  }
+  @keyframes vt-out {
+    to { opacity: 0.4; transform: translateY(-3vh); }
+  }
+  @keyframes vt-in {
+    from { clip-path: inset(100% 0 0 0); }
+    to   { clip-path: inset(0 0 0 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) { animation: none; }
+  }
+</style>

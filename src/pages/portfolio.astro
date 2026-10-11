@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Placeholder from '../components/Placeholder.astro';
+import { ROUTES } from '../lib/site';
+
+const route = ROUTES.find((r) => r.key === 'portfolio')!;
+const works = Array.from({ length: 6 }, (_, i) => ({
+  no: String(i + 1).padStart(2, '0'),
+  title: `Project ${i + 1}`,
+  ratio: i % 3 === 0 ? '16/9' : '4/5',
+}));
+---
+
+<Base route="portfolio" title="Portfolio">
+  <PageHead route={route} />
+  <section class="works">
+    {works.map((w) => (
+      <article class="work">
+        <Placeholder ratio={w.ratio} label={w.title} />
+        <header class="work-meta">
+          <span class="t-label">{w.no}</span>
+          <h2 class="t-title">{w.title}</h2>
+        </header>
+      </article>
+    ))}
+  </section>
+</Base>
+
+<style>
+  .works {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(2rem, 4vw, 4rem) 2rem;
+    padding: clamp(2rem, 6vw, 5rem) var(--gutter);
+  }
+  .work { display: grid; gap: 1rem; align-content: start; }
+  .work-meta { display: flex; gap: 1rem; align-items: baseline; }
+  @media (max-width: 760px) {
+    .works { grid-template-columns: 1fr; }
+  }
+</style>

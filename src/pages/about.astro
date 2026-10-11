@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Placeholder from '../components/Placeholder.astro';
+import { ROUTES } from '../lib/site';
+
+const route = ROUTES.find((r) => r.key === 'about')!;
+---
+
+<Base route="about" title="Core">
+  <PageHead route={route} />
+  <section class="grid">
+    <Placeholder class="portrait" ratio="4/5" label="Portrait" />
+    <div class="text" data-reveal>
+      <p class="t-label t-muted">Values / Habits / Mindset</p>
+      <p class="lead">소개 문구가 들어갈 자리입니다.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    gap: 2rem;
+    padding: clamp(2rem, 6vw, 5rem) var(--gutter);
+  }
+  .grid :global(.portrait) { grid-column: 1 / span 5; }
+  .text { grid-column: 7 / -1; display: grid; gap: 1.5rem; align-content: start; }
+  .lead { font-size: var(--fs-lead); max-width: 33em; }
+  @media (max-width: 900px) {
+    .grid :global(.portrait), .text { grid-column: 1 / -1; }
+  }
+</style>

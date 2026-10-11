@@ -1,0 +1,26 @@
+---
+import { ROUTES, SITE, url } from '../lib/site';
+---
+
+<footer class="foot">
+  <span class="t-label"><span class="dash">{SITE.name}</span> {SITE.year}</span>
+  <nav class="foot-nav" aria-label="푸터 링크">
+    {ROUTES.map((r) => <a class="t-label" href={url(r.path)}>{r.no} {r.label}</a>)}
+  </nav>
+  <span class="t-label t-muted">Press 0–3 to move</span>
+</footer>
+
+<style>
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem var(--gutter);
+    border-top: 1px solid var(--line);
+  }
+  .foot-nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .foot-nav a { transition: color var(--dur-fast); }
+  .foot-nav a:hover { color: var(--red); }
+</style>
