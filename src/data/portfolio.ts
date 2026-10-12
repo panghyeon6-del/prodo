@@ -4,6 +4,7 @@
 // 키컬러(배경에 번지는 색)는 이미지 평균색으로 자동 계산된다. color 는 이미지가 없을 때의 대체 색.
 import type { ImageMetadata } from 'astro';
 import love from '../assets/works/love.jpg';
+import hellow from '../assets/works/hellow.jpg';
 import madeInSeoul from '../assets/works/made-in-seoul.jpg';
 import thisChristmas from '../assets/works/this-christmas.jpg';
 import hi from '../assets/works/hi.jpg';
@@ -35,6 +36,7 @@ export const TYPES: { key: WorkType | 'all'; label: string; ko: string }[] = [
 
 export const WORKS: Work[] = [
   { title: 'Love', type: 'drawing', image: love },
+  { title: 'Hellow', type: 'drawing', image: hellow },
   { title: 'Made in Seoul', type: 'animation', image: madeInSeoul },
   { title: 'This Christmas', type: 'animation', image: thisChristmas },
   { title: 'Hi', type: 'animation', image: hi },

@@ -1,71 +1,53 @@
 ---
 // 랜딩 = 소개. 한 화면, 한 가지 일: "나"를 보여주고 연락할 길을 연다.
-// 가운데 = 대표 이미지(손 그림). 왼쪽 = 누구인지. 오른쪽 = 키워드와 연락 버튼. 아래 = 연락처.
+// 글은 이름 · 한 줄 소개 · 연락처만. 나머지는 그림이 말한다.
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Doodle from '../components/Doodle.astro';
 import Blob from '../components/Blob.astro';
 import Stripe from '../components/Stripe.astro';
-import { CONTACTS, SITE } from '../lib/site';
+import { CONTACTS } from '../lib/site';
 import me from '../assets/me.jpg';
 
-const lines = ['Mural', 'maker by', 'the fire'];
-const cycle = ['Better', 'Clearer', 'Further'];
-const keywords = ['Drawings', 'Animation', 'Murals'];
+const name = '프로도';
 const email = CONTACTS.find((c) => c.copy)!;
 ---
 
-<Base route="home" footer={false} description="모닥불 위 벽화 제작자 — 그림과 애니메이션.">
+<Base route="home" footer={false} title={name} description="프로도 — 모닥불 위 벽화 제작자.">
   <section class="land" data-page="home">
-    <!-- 모서리 메타 -->
-    <p class="t-label meta m-tl">00<br />Personal<br />Enhancement<br /><span class="dash">System</span></p>
-    <p class="t-label meta m-tc" aria-label={cycle.join(' / ')}>
-      {cycle.map((w, i) => (
-        <>
-          <span class="w" data-word aria-hidden="true">{w}</span>
-          {i < cycle.length - 1 && <span class="slash" aria-hidden="true">/</span>}
-        </>
-      ))}
-    </p>
-    <p class="t-label meta m-tr">Play<br />Rewind<br /><span class="dash">Forward</span></p>
-
-    <!-- 왼쪽: 누구인가 -->
+    <!-- 왼쪽: 이름 + 한 줄 -->
     <div class="who">
-      <h1 class="title" aria-label="Mural maker by the fire">
-        {lines.map((line) => (
-          <span class="line" aria-hidden="true">
-            {[...line].map((c) => (c === ' ' ? ' ' : <span class="ch">{c}</span>))}
-          </span>
-        ))}
+      <h1 class="name" aria-label={name}>
+        <span class="line" aria-hidden="true">
+          {[...name].map((c) => <span class="ch">{c}</span>)}
+        </span>
       </h1>
-      <p class="t-label year" aria-hidden="true">{String(SITE.year).slice(0, 2)}<br />{String(SITE.year).slice(2)}</p>
-      <span class="who-bar" aria-hidden="true"></span>
       <p class="intro">
         <Doodle shape="flame" class="flame" />
         모닥불 위 벽화 제작자
       </p>
-      <p class="t-label t-muted who-sub">Same fire<br /><span class="dash">New walls</span></p>
     </div>
 
     <!-- 가운데: 대표 이미지 -->
-    <div class="core">
-      <figure class="frame" data-frame data-cursor data-cursor-label="Say hi">
-        <Blob shape="b" color="var(--pink)" class="blob-a" />
-        <Blob shape="c" color="var(--yellow)" class="blob-b" />
-        <div class="art" data-art>
-          <Image src={me} alt="손바닥을 펼친 손 그림 — 대표 이미지" widths={[480, 720, 1000, 1400]}
-                 sizes="(max-width: 760px) 86vw, 34vw" loading="eager" fetchpriority="high" />
-        </div>
-        <span class="cross c1" aria-hidden="true"></span>
-        <span class="cross c2" aria-hidden="true"></span>
-        <span class="cross c3" aria-hidden="true"></span>
-        <span class="cross c4" aria-hidden="true"></span>
-        <span class="hello" data-hello aria-hidden="true">
-          <Doodle shape="bubble" class="hello-bubble" />
-          <span class="hello-text">Hellow!</span>
-        </span>
-      </figure>
+    <figure class="frame" data-frame data-cursor data-cursor-label="Say hi">
+      <Blob shape="b" color="var(--pink)" class="blob-a" />
+      <Blob shape="c" color="var(--yellow)" class="blob-b" />
+      <div class="art" data-art>
+        <Image src={me} alt="프로도 자화상 — 곱슬머리에 흰 티셔츠, 펜을 든 그림" widths={[480, 720, 1000, 1400]}
+               sizes="(max-width: 760px) 80vw, 30vw" loading="eager" fetchpriority="high" />
+      </div>
+      <span class="cross c1" aria-hidden="true"></span>
+      <span class="cross c2" aria-hidden="true"></span>
+      <span class="cross c3" aria-hidden="true"></span>
+      <span class="cross c4" aria-hidden="true"></span>
+      <span class="hello" data-hello aria-hidden="true">
+        <Doodle shape="bubble" class="hello-bubble" />
+        <span class="hello-text">Hellow!</span>
+      </span>
+    </figure>
 
+    <!-- 오른쪽: 연락 -->
+    <div class="reach">
       <ul class="contacts" aria-label="연락처">
         {CONTACTS.map((c) => (
           <li>
@@ -85,26 +67,10 @@ const email = CONTACTS.find((c) => c.copy)!;
           </li>
         ))}
       </ul>
-    </div>
-
-    <!-- 오른쪽: 키워드 + 연락 -->
-    <div class="side">
-      <ul class="t-label keys-list">
-        {keywords.map((k) => <li>{k}</li>)}
-        <li class="honest">A more <span class="ring">honest<Doodle shape="circle" class="ring-d" stretch draw /></span> me</li>
-      </ul>
       <a class="cta" href={email.href} data-cta data-dark data-cursor-label="Mail">
         <span class="t-label">Let's connect</span>
         <span class="cta-arrow" aria-hidden="true">→</span>
       </a>
-      <p class="t-label t-muted built">Built<br />to<br /><span class="dash">improve</span></p>
-    </div>
-
-    <!-- 아래: 재생 막대 = 1분 시계 -->
-    <div class="bar t-label">
-      <span>Play <span data-clock>00:00:00</span></span>
-      <span class="track" aria-hidden="true"><span class="head" data-head></span></span>
-      <span>A better tomorrow</span>
     </div>
   </section>
   <Stripe />
@@ -117,29 +83,6 @@ const email = CONTACTS.find((c) => c.copy)!;
     const root = document.querySelector<HTMLElement>('[data-page="home"]');
     if (!root) return;
     const { gsap, reduced, cleanup } = (e as MotionEvent).detail;
-
-    /* 시계 + 재생 막대(1분에 한 바퀴) */
-    const clock = root.querySelector<HTMLElement>('[data-clock]')!;
-    const head = root.querySelector<HTMLElement>('[data-head]')!;
-    const fmt = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
-    });
-    const tickClock = () => {
-      const now = new Date();
-      clock.textContent = fmt.format(now);
-      head.style.transform = `scaleX(${(now.getSeconds() * 1000 + now.getMilliseconds()) / 60000})`;
-    };
-    tickClock();
-    gsap.ticker.add(tickClock);
-    cleanup(() => gsap.ticker.remove(tickClock));
-
-    /* Better / Clearer / Further 순환 */
-    const words = gsap.utils.toArray<HTMLElement>('[data-word]', root);
-    let wi = 0;
-    const cycle = () => { words.forEach((w, i) => w.classList.toggle('is-on', i === wi)); wi = (wi + 1) % words.length; };
-    cycle();
-    const wordId = window.setInterval(cycle, 1400);
-    cleanup(() => clearInterval(wordId));
 
     /* 이메일 복사 */
     root.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) =>
@@ -156,7 +99,7 @@ const email = CONTACTS.find((c) => c.copy)!;
       }),
     );
 
-    /* 손 흔들기 + 말풍선 (누르면) */
+    /* 그림을 누르면 몸을 흔들며 인사 */
     const frame = root.querySelector<HTMLElement>('[data-frame]')!;
     const art = root.querySelector<HTMLElement>('[data-art]')!;
     const hello = root.querySelector<HTMLElement>('[data-hello]')!;
@@ -164,7 +107,7 @@ const email = CONTACTS.find((c) => c.copy)!;
     const wave = () => {
       if (!reduced) {
         gsap.fromTo(art, { rotate: 0 }, {
-          keyframes: { rotate: [0, -9, 7, -5, 3, 0] }, duration: 1.1, ease: 'sine.inOut',
+          keyframes: { rotate: [0, -4, 3, -2, 1, 0] }, duration: 1, ease: 'sine.inOut',
           transformOrigin: '50% 100%', overwrite: 'auto',
         });
       }
@@ -180,31 +123,25 @@ const email = CONTACTS.find((c) => c.copy)!;
     const chars = gsap.utils.toArray<HTMLElement>('.ch', root);
     const intro = gsap.timeline({ defaults: { ease: 'expo.out' } });
     intro
-      .from(chars, { yPercent: 110, duration: 1, stagger: 0.025 })
-      .from(art, { clipPath: 'inset(100% 0% 0% 0%)', duration: 1.2 }, 0.15)
+      .from(chars, { yPercent: 110, duration: 1.1, stagger: 0.07 })
+      .from(art, { clipPath: 'inset(100% 0% 0% 0%)', duration: 1.2 }, 0.1)
       .from('.cross', { scale: 0, rotate: 90, duration: 0.7, stagger: 0.06, ease: 'back.out(2)' }, 0.5)
       .from(['.blob-a', '.blob-b'], { scale: 0.3, autoAlpha: 0, duration: 1.4, stagger: 0.15 }, 0.3)
-      .from('.who-bar', { scaleX: 0, transformOrigin: 'left', duration: 0.8 }, 0.6)
-      .from(['.intro', '.who-sub', '.year'], { y: 16, autoAlpha: 0, duration: 0.8, stagger: 0.08 }, 0.7)
-      .from('.flame path', { strokeDasharray: 1, strokeDashoffset: 1, duration: 0.9, stagger: 0.15, ease: 'power2.inOut' }, 0.9)
-      .from('.contacts li', { y: 20, autoAlpha: 0, duration: 0.7, stagger: 0.07 }, 0.8)
-      .from(['.keys-list li', '.cta', '.built'], { x: 24, autoAlpha: 0, duration: 0.8, stagger: 0.06 }, 0.7)
-      .from('.meta', { autoAlpha: 0, duration: 0.8, stagger: 0.05 }, 0.5)
-      .add(wave, 1.6);
+      .from('.intro', { y: 14, autoAlpha: 0, duration: 0.8 }, 0.6)
+      .from('.flame path', { strokeDasharray: 1, strokeDashoffset: 1, duration: 0.9, stagger: 0.15, ease: 'power2.inOut' }, 0.8)
+      .from(['.contacts li', '.cta'], { y: 18, autoAlpha: 0, duration: 0.7, stagger: 0.07 }, 0.7)
+      .add(wave, 1.5);
 
-    /* 마우스: 이미지가 커서 쪽으로 기울고, 물감은 반대로 밀림 / 글자는 살짝 들림 */
-    const mqFine = matchMedia('(hover: hover) and (pointer: fine)').matches;
-    if (!mqFine) return;
+    /* 마우스: 그림이 커서 쪽으로 기울고, 물감은 반대로 / 이름은 살짝 들림 / 버튼은 끌려옴 */
+    if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    gsap.set(art, { transformPerspective: 900 });
     const rx = gsap.quickTo(art, 'rotationX', { duration: 0.6, ease: 'power3.out' });
     const ry = gsap.quickTo(art, 'rotationY', { duration: 0.6, ease: 'power3.out' });
     const bx = gsap.quickTo('.blob-a', 'x', { duration: 1, ease: 'power3.out' });
     const by = gsap.quickTo('.blob-a', 'y', { duration: 1, ease: 'power3.out' });
     const cx = gsap.quickTo('.blob-b', 'x', { duration: 1.4, ease: 'power3.out' });
     const cy = gsap.quickTo('.blob-b', 'y', { duration: 1.4, ease: 'power3.out' });
-    gsap.set(art, { transformPerspective: 900 });
-
     const setters = chars.map((c) => ({ el: c, y: gsap.quickTo(c, 'y', { duration: 0.5, ease: 'power3.out' }) }));
-
     const cta = root.querySelector<HTMLElement>('[data-cta]')!;
     const mx = gsap.quickTo(cta, 'x', { duration: 0.5, ease: 'power3.out' });
     const my = gsap.quickTo(cta, 'y', { duration: 0.5, ease: 'power3.out' });
@@ -214,18 +151,16 @@ const email = CONTACTS.find((c) => c.copy)!;
       const f = frame.getBoundingClientRect();
       const nx = (ev.clientX - (f.left + f.width / 2)) / window.innerWidth;
       const ny = (ev.clientY - (f.top + f.height / 2)) / window.innerHeight;
-      ry(nx * 16);
-      rx(-ny * 12);
+      ry(nx * 14); rx(-ny * 10);
       bx(-nx * 60); by(-ny * 40);
       cx(nx * 40); cy(ny * 30);
 
       for (const s of setters) {
         const b = s.el.getBoundingClientRect();
         const d = Math.hypot(ev.clientX - (b.left + b.width / 2), ev.clientY - (b.top + b.height / 2));
-        s.y(-Math.max(0, 1 - d / 160) * b.height * 0.16);
+        s.y(-Math.max(0, 1 - d / 200) * b.height * 0.12);
       }
 
-      // 연락 버튼이 커서에 끌려옴
       const c = cta.getBoundingClientRect();
       const dx = ev.clientX - (c.left + c.width / 2);
       const dy = ev.clientY - (c.top + c.height / 2);
@@ -249,107 +184,53 @@ const email = CONTACTS.find((c) => c.copy)!;
     flex: 1;
     display: grid;
     grid-template-columns: repeat(12, minmax(0, 1fr));
-    grid-template-rows: auto 1fr auto;
-    grid-template-areas:
-      'tl tl tl tc tc tc tc tc tc tr tr tr'
-      'wh wh wh wh co co co co sd sd sd sd'
-      'br br br br br br br br br br br br';
+    grid-template-areas: 'wh wh wh wh co co co co rc rc rc rc';
+    align-items: center;
     column-gap: clamp(1rem, 2vw, 2rem);
-    row-gap: clamp(1rem, 3svh, 2.25rem);
     min-height: calc(100svh - var(--nav-h) - 15px);
     padding:
-      clamp(1.25rem, 3.5svh, 2.25rem)
+      clamp(2rem, 6svh, 4rem)
       max(var(--gutter), env(safe-area-inset-right))
-      clamp(1rem, 2.5svh, 1.75rem)
+      clamp(2rem, 6svh, 4rem)
       max(var(--gutter), env(safe-area-inset-left));
     overflow-x: clip;
   }
 
-  /* ── 메타 ─────────────────────────────── */
-  .m-tl { grid-area: tl; }
-  .m-tc { grid-area: tc; justify-self: center; display: flex; gap: 1.1em; letter-spacing: 0.25em; }
-  .m-tr { grid-area: tr; justify-self: end; }
-  .w { color: var(--ink-soft); transition: color 0.3s linear; }
-  .w:global(.is-on) { color: var(--ink); }
-  .slash { color: var(--ink-soft); }
-
-  /* ── 왼쪽 ─────────────────────────────── */
-  .who {
-    grid-area: wh;
-    position: relative;
-    align-self: center;
-    display: grid;
-    align-content: center;
-    gap: 1.25rem;
-  }
-  .title {
-    font-size: clamp(2.5rem, 5.4vw, 6rem);
+  /* ── 이름 ─────────────────────────────── */
+  .who { grid-area: wh; display: grid; gap: 1.5rem; }
+  .name {
+    font-size: clamp(3.5rem, 8.5vw, 9rem);
     font-weight: var(--w-display);
-    letter-spacing: var(--ls-display);
-    line-height: var(--lh-display);
-    text-transform: uppercase;
+    letter-spacing: -0.06em;
+    line-height: 1.05;
     user-select: none;
   }
   .line { display: block; clip-path: inset(-0.4em -0.2em 0 -0.2em); white-space: nowrap; }
   .ch { display: inline-block; cursor: default; }
-  .year { position: absolute; top: 0; right: 0; text-align: right; }
-  .who-bar { width: 2rem; height: 2px; background: var(--ink); }
   .intro {
     display: flex;
     align-items: center;
     gap: 0.6rem;
     font-size: var(--fs-lead);
-    font-weight: var(--w-title);
+    font-weight: var(--w-text);
     letter-spacing: -0.02em;
   }
-  .intro :global(.flame) { width: 2.1rem; flex: none; color: var(--red); }
+  .intro :global(.flame) { width: 2rem; flex: none; color: var(--red); }
 
-  /* ── 가운데 ───────────────────────────── */
-  .core {
-    grid-area: co;
-    display: grid;
-    justify-items: center;
-    align-content: center;
-    gap: clamp(1.25rem, 3svh, 2rem);
-  }
+  /* ── 대표 이미지 ──────────────────────── */
   .frame {
-    --size: min(100%, 28vw, 50svh);
+    grid-area: co;
+    justify-self: center;
     position: relative;
-    width: var(--size);
+    width: min(100%, 30vw, calc((100svh - var(--nav-h) - 9rem) * 0.75));
     cursor: pointer;
   }
-  .art {
-    position: relative;
-    z-index: 1;
-    aspect-ratio: 2000 / 2297;
-    /* 흰 바탕을 종이색·물감에 녹인다 (부모에 isolation 을 두면 안 됨) */
-    mix-blend-mode: multiply;
-  }
+  .art { position: relative; z-index: 1; aspect-ratio: 1600 / 2134; }
   .art :global(img) { width: 100%; height: 100%; object-fit: cover; }
-  .frame :global(.blob-a) {
-    position: absolute;
-    z-index: 0;
-    width: 78%;
-    left: -24%;
-    bottom: -14%;
-    opacity: 0.75;
-  }
-  .frame :global(.blob-b) {
-    position: absolute;
-    z-index: 0;
-    width: 34%;
-    right: -12%;
-    top: -8%;
-    opacity: 0.7;
-  }
+  .frame :global(.blob-a) { position: absolute; z-index: 0; width: 70%; left: -22%; bottom: -10%; opacity: 0.8; }
+  .frame :global(.blob-b) { position: absolute; z-index: 0; width: 34%; right: -14%; top: -7%; opacity: 0.8; }
 
-  .cross {
-    position: absolute;
-    z-index: 2;
-    width: 18px;
-    height: 18px;
-    transition: translate var(--dur) var(--ease-spring);
-  }
+  .cross { position: absolute; z-index: 2; width: 18px; height: 18px; transition: translate var(--dur) var(--ease-spring); }
   .cross::before, .cross::after { content: ''; position: absolute; background: var(--ink); }
   .cross::before { left: 50%; top: 0; bottom: 0; width: 1px; }
   .cross::after { top: 50%; left: 0; right: 0; height: 1px; }
@@ -367,8 +248,8 @@ const email = CONTACTS.find((c) => c.copy)!;
   .hello {
     position: absolute;
     z-index: 3;
-    right: -18%;
-    top: 4%;
+    right: -20%;
+    top: 8%;
     display: grid;
     place-items: center;
     width: 8.5rem;
@@ -376,28 +257,29 @@ const email = CONTACTS.find((c) => c.copy)!;
     pointer-events: none;
   }
   .hello :global(.hello-bubble) { position: absolute; inset: 0; width: 100%; height: 100%; fill: var(--white); color: var(--ink); }
-  .hello-text {
-    position: relative;
-    translate: 0 -12%;
-    font-weight: var(--w-display);
-    font-size: 1.25rem;
-    letter-spacing: -0.03em;
-    color: var(--red);
-  }
+  .hello-text { position: relative; translate: 0 -12%; font-weight: var(--w-display); font-size: 1.25rem; letter-spacing: -0.03em; color: var(--red); }
 
-  .contacts { list-style: none; width: min(100%, 26rem); }
+  /* ── 연락 ─────────────────────────────── */
+  .reach {
+    grid-area: rc;
+    display: grid;
+    gap: 2rem;
+    justify-self: end;
+    width: min(100%, 24rem);
+  }
+  .contacts { list-style: none; border-top: 1px solid var(--ink); }
   .row {
     display: grid;
-    grid-template-columns: 6.5rem 1fr auto;
+    grid-template-columns: 6rem 1fr auto;
     align-items: center;
     gap: 0.75rem;
     width: 100%;
-    min-height: 2.9rem;
+    min-height: 3rem;
     border-bottom: 1px solid var(--ink);
     text-align: left;
     transition: color var(--dur-fast);
   }
-  .row-val { font-size: 0.9375rem; letter-spacing: 0.02em; overflow-wrap: anywhere; }
+  .row-val { font-size: 0.9375rem; letter-spacing: 0.01em; overflow-wrap: anywhere; }
   .row-end { justify-self: end; transition: transform var(--dur) var(--ease-spring); }
   .row:global(.is-copied) { color: var(--red); }
   @media (hover: hover) {
@@ -405,82 +287,42 @@ const email = CONTACTS.find((c) => c.copy)!;
     .row:hover .row-end { transform: translateX(4px); }
   }
 
-  /* ── 오른쪽 ───────────────────────────── */
-  .side {
-    grid-area: sd;
-    align-self: center;
-    display: grid;
-    gap: clamp(1.5rem, 4svh, 2.75rem);
-    padding-left: clamp(0rem, 3vw, 3rem);
-  }
-  .keys-list { list-style: none; display: grid; gap: 0.55rem; }
-  .honest::after { content: ''; display: block; width: 0.8rem; height: 1px; margin-top: 0.9rem; background: currentColor; }
-  .ring { position: relative; display: inline-block; padding-inline: 0.15em; }
-  .ring :global(.ring-d) { position: absolute; inset: -0.6em -0.5em; width: calc(100% + 1em); height: calc(100% + 1.2em); color: var(--red); }
-
   .cta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    min-height: 3.6rem;
-    padding: 0 1.5rem;
+    min-height: 3.5rem;
+    padding: 0 1.4rem;
     background: var(--red);
     color: var(--white);
-    will-change: transform;
   }
-  .cta .t-label { font-size: clamp(0.8rem, 1.1vw, 1rem); letter-spacing: 0.3em; }
-  .cta-arrow { font-size: 1.4rem; transition: transform var(--dur) var(--ease-spring); }
+  .cta .t-label { letter-spacing: 0.3em; }
+  .cta-arrow { font-size: 1.35rem; transition: transform var(--dur) var(--ease-spring); }
   @media (hover: hover) {
     .cta:hover .cta-arrow { transform: translateX(6px) rotate(-20deg); }
-  }
-
-  /* ── 아래 막대 ────────────────────────── */
-  .bar {
-    grid-area: br;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 1.25rem;
-  }
-  .bar [data-clock] { margin-left: 0.6em; color: var(--ink-soft); }
-  .track { position: relative; height: 1px; background: var(--ink); }
-  .head {
-    position: absolute;
-    left: 0;
-    top: -1px;
-    width: 100%;
-    height: 3px;
-    background: var(--red);
-    transform: scaleX(0);
-    transform-origin: left;
   }
 
   /* ── 태블릿 세로 · 폰 ─────────────────── */
   @media (max-width: 900px) and (orientation: portrait), (max-width: 640px) {
     .land {
-      grid-template-areas:
-        'tl tl tl tl tl tl tr tr tr tr tr tr'
-        'wh wh wh wh wh wh wh wh wh wh wh wh'
-        'co co co co co co co co co co co co'
-        'sd sd sd sd sd sd sd sd sd sd sd sd'
-        'br br br br br br br br br br br br';
-      grid-template-rows: auto auto auto auto auto;
-      row-gap: 2.25rem;
+      grid-template-areas: 'wh' 'co' 'rc';
+      grid-template-columns: 1fr;
+      row-gap: 2.75rem;
+      align-items: start;
     }
-    .m-tc { display: none; }
-    .title { font-size: clamp(2.6rem, 13vw, 6rem); }
-    .frame { --size: min(84vw, 30rem); margin-block: 0.5rem; }
-    .hello { right: -4%; top: -6%; width: 7rem; }
-    .contacts { width: 100%; }
-    .side { padding-left: 0; }
-    .built { display: none; }
+    .name { font-size: clamp(3.5rem, 22vw, 9rem); }
+    .frame { width: min(78vw, 26rem); }
+    .hello { right: -6%; top: -4%; width: 7rem; }
+    .reach { justify-self: stretch; width: 100%; }
   }
 
   /* ── 가로로 누운 폰 ───────────────────── */
   @media (max-height: 520px) and (orientation: landscape) {
-    .title { font-size: clamp(2rem, 4.6vw, 3rem); }
-    .land { row-gap: 1rem; }
-    .frame { --size: min(24vw, 56svh); }
-    .who-sub, .built, .m-tc, .m-tl, .m-tr { display: none; }
+    .name { font-size: clamp(2.5rem, 7vw, 4rem); }
+    .frame { width: min(26vw, calc((100svh - var(--nav-h) - 4rem) * 0.75)); }
+    .land { padding-block: 1.25rem; grid-template-areas: 'wh wh wh co co co co rc rc rc rc rc'; }
+    .row { grid-template-columns: 6.25rem 1fr auto; }
+    .row .t-label { letter-spacing: 0.1em; }
+    .row-val { font-size: 0.8125rem; }
   }
 </style>
