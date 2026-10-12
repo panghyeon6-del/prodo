@@ -14,19 +14,19 @@
 - `[data-reveal]` — 스크롤 진입 시 올라오며 나타남 / `svg[data-draw]` — 선이 그려짐
 - `[data-dark]` — 어두운 면: 커스텀 커서가 흰색으로 바뀜 / `data-cursor-label` — 커서 옆 라벨
 - `src/components/Doodle.astro` — 손그림 SVG(circle·underline·arrow·star·squiggle·cross·burst·hatch). `#boil` 필터로 선이 떨림. 부모에서 크기 지정 시 `.부모 :global(.클래스)` 로 쓸 것(스코프 스타일이 자식 컴포넌트에 안 닿음)
-- `src/data/portfolio.ts` — 작품 목록(src/assets/works/). 키컬러는 이미지 평균색으로 자동
+- `src/data/portfolio.ts` — 작품 목록(src/assets/works/)
 - `src/data/milestone.ts` — 현재 마일스톤 하나. NOW 위치는 브라우저에서 오늘 날짜로 계산
 
 ## 페이지 = 기능 하나
 - 랜딩 = 소개(/about 은 / 로 리다이렉트): 가운데 대표 이미지(src/assets/me.jpg) + 왼쪽 소개 + 오른쪽 연락 버튼 + 아래 연락처. 연락처는 `src/lib/site.ts` 의 CONTACTS
-- 포트폴리오: 메이슨리 + 필터 + 크게 보기. 활성 작품 색이 배경에 번지고 `--key` 가 물듦
+- 포트폴리오: 가로 캐러셀(정사각형) + 필터 + 크게 보기(원본 비율). 작품 설명은 data 의 desc, 크롭 기준은 focus
 - 마일스톤: 가로 계획표 + NOW
 - 홈 버튼 = 내비 왼쪽 빨간 네모
 
-## 키치 장치 (그림체에서 가져옴)
-- `Blob.astro` 수채 번짐(#wc 필터) — 분홍·노랑 등 그림 팔레트는 블롭·띠에만, 글자·UI 강조는 빨강만
-- `Stripe.astro` 빨강·노랑·초록 삼색 띠 — 모든 페이지 맨 아래(손 그림 하단에서)
-- 대표 이미지는 `mix-blend-mode: multiply` 로 흰 바탕을 종이에 녹임 → 조상 요소에 isolation/불투명 배경 금지
+## 톤: 미니멀
+- 흰 바탕, 장식 최소. 수채 얼룩·배경 번짐은 제거함(사용자 요청). 그림이 주인공
+- 여백: `--gutter`(폭의 6%), `--space-y`(위아래 숨). 새 섹션도 이 두 값으로 간격을 잡을 것
+- 남은 장치: 두들(불꽃·NOW 동그라미·말풍선), 하단 `Stripe.astro` 삼색 띠, 빨강 단일 강조색
 
 ## 검증
 - 375 / 390 / 768 / 1024 / 1440 / 1920 + 가로 폰(844×390) 에서 가로 스크롤 없을 것

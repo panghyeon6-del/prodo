@@ -11,13 +11,12 @@
   --line: #c4c2bd;         /* 1px 격자선 */
   --red: #e23b2a;          /* 주 강조색 — 그림의 'MADE IN SEOUL' 빨강 */
   --white: #f2f2f0;        /* 검정·빨강 위 글자 */
-  /* 그림에서 뽑은 키치 팔레트 — 수채 블롭·삼색 띠에만 쓴다(글자·UI 에는 빨강만) */
+  /* 그림에서 뽑은 팔레트 — 삼색 띠에만 쓴다(글자·UI 에는 빨강만) */
   --pink: #f2c3b4;
   --salmon: #eb9a86;
   --teal: #5ea8ba;
   --yellow: #f3de3b;
   --green: #3ba64b;
-  --key: var(--paper);     /* 페이지 키컬러 — 포트폴리오에서 이미지 색을 따라 변함 */
 
   /* ── 서체: Pretendard 단독 ─────────────────────── */
   --font: 'Pretendard Variable', Pretendard, -apple-system, 'Noto Sans KR', sans-serif;
@@ -45,7 +44,8 @@
   --lh-body: 1.45;
 
   /* ── 격자 ─────────────────────────────────────── */
-  --gutter: clamp(16px, 3.3vw, 60px);   /* 바깥 여백 */
+  --gutter: clamp(20px, 6vw, 112px);    /* 바깥 여백 — 화면 폭의 6% (미술 포트폴리오의 넉넉한 프레임) */
+  --space-y: clamp(3rem, 11svh, 8rem);   /* 페이지 위·아래 숨 */
   --gap: 1px;                            /* 셀 사이 = 선 */
   --cols: 12;
   --nav-h: 2.75rem;      /* 얇은 상단 바 */

@@ -161,7 +161,6 @@ document.addEventListener('astro:before-swap', () => {
   ctx = null;
   ScrollTrigger.getAll().forEach((st) => st.kill());
   destroyScroll();
-  document.body.style.removeProperty('--key');
 });
 
 export { gsap, ScrollTrigger };

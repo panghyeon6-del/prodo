@@ -26,7 +26,7 @@ body {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  background: var(--key);
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--font);
   font-weight: var(--w-text);

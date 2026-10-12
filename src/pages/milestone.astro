@@ -4,7 +4,6 @@
 // 빌드 시점 값으로 먼저 그리고, 브라우저에서 오늘 날짜로 다시 계산한다(정적 사이트라 빌드가 오래돼도 정확).
 import Base from '../layouts/Base.astro';
 import Doodle from '../components/Doodle.astro';
-import Blob from '../components/Blob.astro';
 import { getRoute } from '../lib/site';
 import { MILESTONE as M } from '../data/milestone';
 
@@ -46,7 +45,6 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
       <div class="head-row">
         <h1 class="t-display title">{M.title}</h1>
         <p class="pct" aria-label="진행률">
-          <Blob shape="a" color="var(--yellow)" class="pct-blob" />
           <span data-pct>{Math.round(progress)}</span><span class="pct-unit">%</span>
         </p>
       </div>
@@ -167,7 +165,7 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
 </script>
 
 <style>
-  .page { padding-block: clamp(2rem, 6vw, 5rem) clamp(3rem, 8vw, 6rem); }
+  .page { padding-block: var(--space-y) 0; }
 
   /* ── 머리 ───────────────────────────────── */
   .head { display: grid; gap: clamp(1rem, 2.5vw, 2rem); }
@@ -178,9 +176,9 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
     align-items: flex-end;
     gap: 1rem 3rem;
   }
-  .title { font-size: min(var(--fs-display), 14vw); max-width: 9em; }
+  .title { font-size: clamp(2.5rem, 6.4vw, 6.5rem); max-width: 9em; }
   .pct {
-    font-size: clamp(3.5rem, 10vw, 9rem);
+    font-size: clamp(3rem, 7vw, 6.5rem);
     font-weight: var(--w-text);
     letter-spacing: -0.05em;
     line-height: 0.8;
@@ -189,7 +187,6 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
   }
   .pct { position: relative; isolation: isolate; }
   .pct-unit { font-size: 0.4em; vertical-align: top; margin-left: 0.05em; }
-  .pct :global(.pct-blob) { position: absolute; z-index: -1; width: 1.25em; left: -0.2em; top: -0.25em; opacity: 0.8; }
   .sub { align-items: flex-start; }
   .summary { font-size: var(--fs-lead); max-width: 28em; line-height: 1.4; }
   .facts {
@@ -202,8 +199,9 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
   /* ── 계획표 ─────────────────────────────── */
   .plan {
     position: relative;
-    margin-top: clamp(3rem, 8vw, 6rem);
-    padding-bottom: 4.5rem;
+    margin-top: var(--space-y);
+    margin-bottom: clamp(2rem, 6svh, 4rem);
+    padding-bottom: 5rem;
   }
   .phases {
     list-style: none;
@@ -312,7 +310,7 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
     display: grid;
     align-content: start;
     gap: 0.75rem;
-    padding: 1.5rem;
+    padding: clamp(1.25rem, 2.2vw, 2rem);
     border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     min-height: 16rem;

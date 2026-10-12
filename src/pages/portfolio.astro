@@ -1,10 +1,9 @@
 ---
 // 포트폴리오 — 한 가지 일: 작품을 한 장씩 넘겨 본다.
-// 가로 캐러셀(정사각형). 지금 맨 앞에 선 작품의 색이 배경 뒤로 번지고 페이지 키컬러가 물든다.
+// 가로 캐러셀(정사각형). 흰 바탕 위에 작품만.
 // 넘기기: 화살표 버튼 · 키보드 ←→ · 스와이프 · 마우스 드래그 · 트랙패드 가로 스크롤
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import Doodle from '../components/Doodle.astro';
 import { getRoute } from '../lib/site';
 import { TYPES, WORKS } from '../data/portfolio';
 
@@ -15,23 +14,17 @@ const typeLabel = Object.fromEntries(TYPES.map((t) => [t.key, t.label]));
 const items = WORKS.map((w) => ({
   ...w,
   widths: w.image ? [...[400, 800, 1200].filter((x) => x < w.image!.width), w.image.width] : [],
-  color: w.color ?? '#b5b0a8',
+  color: w.color ?? 'var(--paper-2)',
 }));
 const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
 <Base route="portfolio" title="Portfolio">
-  <!-- 배경에 번지는 앰비언트 레이어 (두 장을 교차) -->
-  <div class="ambient" aria-hidden="true">
-    <div class="amb" data-amb></div>
-    <div class="amb" data-amb></div>
-  </div>
 
   <div class="page" data-page="portfolio">
     <header class="head wrap">
       <h1 class="t-display title">
         {route.label}<sup class="count" data-count>({items.length})</sup>
-        <Doodle shape="squiggle" class="title-squiggle" draw />
       </h1>
       <div class="filters" role="group" aria-label="종류별 보기">
         {types.map((t, i) => (
@@ -45,7 +38,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     <section class="carousel" aria-roledescription="carousel" aria-label="작품">
       <ol class="track" data-track tabindex="0" aria-label="작품 목록 — 좌우 화살표로 넘기기">
         {items.map((w, i) => (
-          <li class="slide" data-slide data-type={w.type} data-color={w.color}
+          <li class="slide" data-slide data-type={w.type}
               aria-roledescription="slide" aria-label={`${pad(i + 1)} / ${pad(items.length)}`}>
             <button class="media" data-open data-cursor-label="View" aria-label={`${w.title} 크게 보기`}
                     style={`--c:${w.color}`}>
@@ -98,23 +91,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
 <script>
   import type { MotionEvent } from '../scripts/motion';
 
-  /** 이미지 평균색 (8×8 샘플) */
-  function averageColor(img: HTMLImageElement): string | null {
-    try {
-      const c = document.createElement('canvas');
-      c.width = c.height = 8;
-      const g = c.getContext('2d', { willReadFrequently: true })!;
-      g.drawImage(img, 0, 0, 8, 8);
-      const d = g.getImageData(0, 0, 8, 8).data;
-      let r = 0, gg = 0, b = 0;
-      for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; }
-      const n = d.length / 4;
-      return `rgb(${Math.round(r / n)} ${Math.round(gg / n)} ${Math.round(b / n)})`;
-    } catch {
-      return null;
-    }
-  }
-
   document.addEventListener('motion:ready', (e) => {
     const root = document.querySelector<HTMLElement>('[data-page="portfolio"]');
     if (!root) return;
@@ -128,34 +104,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     const totalEl = root.querySelector<HTMLElement>('[data-total]')!;
     const countEl = root.querySelector<HTMLElement>('[data-count]')!;
     const progress = root.querySelector<HTMLElement>('[data-progress]')!;
-    const ambs = gsap.utils.toArray<HTMLElement>('[data-amb]');
     const pad = (n: number) => String(n).padStart(2, '0');
-
-    /* ── 배경 번짐 ── */
-    let front = 0;
-    let current: HTMLElement | null = null;
-
-    // 이미지 평균색을 키컬러로
-    slides.forEach((li) => {
-      const img = li.querySelector('img');
-      if (!img) return;
-      const apply = () => { const c = averageColor(img); if (c) li.dataset.color = c; if (li === current) paint(li); };
-      if (img.complete) apply(); else img.addEventListener('load', apply, { once: true });
-    });
-
-    function paint(li: HTMLElement | null) {
-      const color = li?.dataset.color;
-      document.body.style.setProperty('--key', color ? `color-mix(in oklab, var(--paper) 86%, ${color})` : 'var(--paper)');
-      const next = ambs[1 - front];
-      if (li && color) {
-        const img = li.querySelector('img');
-        next.style.backgroundColor = color;
-        next.style.backgroundImage = img ? `url("${img.currentSrc || img.src}")` : '';
-        next.classList.add('is-on');
-      }
-      ambs[front].classList.remove('is-on');
-      front = 1 - front;
-    }
 
     /* ── 위치 계산 ── */
     const visible = () => slides.filter((s) => !s.hidden);
@@ -186,13 +135,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
       curEl.textContent = pad(i + 1);
       totalEl.textContent = pad(list.length);
       slides.forEach((s) => s.classList.toggle('is-current', s === list[i]));
-      current = list[i] ?? null;
-      paint(current);
     }
     let raf = 0;
     track.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); }, { passive: true });
     window.addEventListener('resize', update);
-    cleanup(() => { window.removeEventListener('resize', update); paint(null); });
+    cleanup(() => window.removeEventListener('resize', update));
 
     prevBtn.addEventListener('click', () => goTo(indexNow() - 1));
     nextBtn.addEventListener('click', () => goTo(indexNow() + 1));
@@ -311,21 +258,6 @@ const pad = (n: number) => String(n).padStart(2, '0');
 </script>
 
 <style>
-  /* ── 앰비언트 ───────────────────────────── */
-  .ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-  .amb {
-    position: absolute;
-    inset: -15%;
-    background-size: cover;
-    background-position: center;
-    filter: blur(90px) saturate(1.25);
-    opacity: 0;
-    transform: scale(1.05);
-    transition: opacity 1.2s linear, transform 2.4s var(--ease-out);
-    mask-image: radial-gradient(closest-side, #000 30%, transparent);
-  }
-  .amb:global(.is-on) { opacity: 0.32; transform: scale(1); }
-
   .page { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
   /* ── 머리 ───────────────────────────────── */
@@ -335,11 +267,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
     align-items: flex-end;
     justify-content: space-between;
     gap: 1.25rem 2rem;
-    padding-block: clamp(1.75rem, 5svh, 3.5rem) clamp(2.5rem, 5svh, 3.5rem);
+    padding-block: var(--space-y) clamp(2.5rem, 7svh, 4.5rem);
   }
-  .title { position: relative; font-size: min(var(--fs-display), 15vw, 15svh); }
+  .title { position: relative; font-size: clamp(2.5rem, 5.6vw, 5.5rem); }
   .count { font-size: 0.22em; font-weight: var(--w-text); letter-spacing: 0; vertical-align: top; margin-left: 0.2em; }
-  .head :global(.title-squiggle) { position: absolute; left: 0; bottom: -0.3em; width: 0.9em; color: var(--red); }
 
   .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .chip {
@@ -358,11 +289,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
   /* ── 캐러셀 ─────────────────────────────── */
   .carousel {
-    --size: min(40vw, calc(100svh - var(--nav-h) - 22.5rem));
-    --gap: clamp(1rem, 2vw, 1.75rem);
+    --size: min(36vw, calc(100svh - var(--nav-h) - 26rem));
+    --gap: clamp(1.25rem, 3.2vw, 3.5rem);
     position: relative;
     min-width: 0; /* flex 자식이 내용 폭만큼 늘어나지 않게 → 트랙이 스크롤됨 */
-    padding-bottom: clamp(2rem, 6svh, 4rem);
   }
   .track {
     list-style: none;
@@ -388,10 +318,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
     scroll-snap-align: start;
     display: grid;
     align-content: start;
-    gap: 0.6rem;
+    gap: 0.75rem;
     transition: opacity var(--dur) linear;
   }
-  .slide:not(:global(.is-current)) { opacity: 0.55; }
+  .slide:not(:global(.is-current)) { opacity: 0.35; }
   .slide:global(.is-current) { opacity: 1; }
 
   .media {
@@ -419,7 +349,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     grid-template-columns: auto 1fr auto;
     align-items: baseline;
     gap: 0.75rem;
-    padding-top: 0.4rem;
+    padding-top: 0.6rem;
   }
   .work-title { font-size: var(--fs-body); font-weight: var(--w-title); letter-spacing: -0.01em; }
   .slide:global(.is-current) .work-title { color: var(--red); }
@@ -433,15 +363,15 @@ const pad = (n: number) => String(n).padStart(2, '0');
     z-index: 2;
     display: grid;
     place-items: center;
-    width: 3.25rem;
-    height: 3.25rem;
+    width: 2.75rem;
+    height: 2.75rem;
     background: var(--ink);
     color: var(--white);
     transition: opacity var(--dur-fast), transform var(--dur) var(--ease-spring);
   }
   .arrow svg { width: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.5; }
-  .prev { left: max(var(--gutter), env(safe-area-inset-left)); }
-  .next { right: max(var(--gutter), env(safe-area-inset-right)); }
+  .prev { left: calc(max(var(--gutter), env(safe-area-inset-left)) - 1.375rem); }
+  .next { right: calc(max(var(--gutter), env(safe-area-inset-right)) - 1.375rem); }
   .arrow:disabled { opacity: 0; pointer-events: none; }
   @media (hover: hover) {
     .prev:hover { transform: translateX(-3px); }
@@ -452,7 +382,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     display: flex;
     align-items: center;
     gap: 1.25rem;
-    margin-top: clamp(1.25rem, 3svh, 2rem);
+    margin-top: clamp(2rem, 5svh, 3.5rem);
   }
   .progress { flex: 1; max-width: 16rem; height: 1px; background: var(--line); position: relative; }
   .progress span {
@@ -465,8 +395,9 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
   /* ── 폰 ─────────────────────────────────── */
   @media (max-width: 640px) {
-    .carousel { --size: 84vw; }
-    .arrow { width: 2.75rem; height: 2.75rem; }
+    .carousel { --size: calc(100vw - 2 * var(--gutter) - 1.5rem); }
+    .prev { left: calc(var(--gutter) / 2); }
+    .next { right: calc(var(--gutter) / 2); }
     .head { align-items: flex-start; flex-direction: column; }
   }
   /* 터치 기기는 스와이프가 기본이라 버튼을 작게 */
@@ -478,8 +409,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     .carousel { --size: min(40vw, calc(100svh - var(--nav-h) - 6rem)); }
     .head { padding-block: 1rem; }
     .title { font-size: 2.5rem; }
-    .head :global(.title-squiggle) { display: none; }
-  }
+    }
 
   /* ── 크게 보기 ───────────────────────────── */
   .viewer {

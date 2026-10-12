@@ -40,14 +40,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '');
         </feTurbulence>
         <feDisplacementMap in="SourceGraphic" in2="n" scale="3" />
       </filter>
-      <!-- 수채 번짐: 가장자리를 크게 흔들고, 종이 입자만큼 물감을 덜어낸다 -->
-      <filter id="wc" x="-25%" y="-25%" width="150%" height="150%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="3" seed="7" result="edge" />
-        <feDisplacementMap in="SourceGraphic" in2="edge" scale="26" result="shape" />
-        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="2" result="grain" />
-        <feColorMatrix in="grain" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.55" result="mask" />
-        <feComposite in="shape" in2="mask" operator="in" />
-      </filter>
     </svg>
 
     <Nav current={route} />
