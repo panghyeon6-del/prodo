@@ -48,7 +48,7 @@
   --gutter: clamp(16px, 3.3vw, 60px);   /* 바깥 여백 */
   --gap: 1px;                            /* 셀 사이 = 선 */
   --cols: 12;
-  --nav-h: 4rem;
+  --nav-h: 2.75rem;      /* 얇은 상단 바 */
 
   /* ── 모션 ─────────────────────────────────────── */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* expo out */
@@ -60,5 +60,5 @@
 }
 
 @media (max-width: 760px) {
-  :root { --nav-h: 3.5rem; }
+  :root { --nav-h: 2.75rem; }
 }

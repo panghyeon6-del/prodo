@@ -24,7 +24,6 @@ const { current } = Astro.props;
             aria-current={r.key === current ? 'page' : undefined}
             data-route={r.key}
           >
-            <span class="t-label tile-no">{r.no}</span>
             <span class="t-label tile-label">{r.label}</span>
           </a>
         </li>
@@ -64,13 +63,13 @@ const { current } = Astro.props;
   .home {
     display: grid;
     place-items: center;
-    width: calc(var(--h) + 1rem);
+    width: calc(var(--h) + 0.75rem);
     flex: none;
     border-right: 1px solid var(--line);
     margin-left: calc(var(--gutter) - 0.5rem);
   }
   .home-square {
-    width: 1.75rem;
+    width: 1.125rem;
     aspect-ratio: 1;
     background: var(--red);
     transition: transform var(--dur) var(--ease-spring), border-radius var(--dur) var(--ease-out);
@@ -93,10 +92,9 @@ const { current } = Astro.props;
   .tile {
     position: relative;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
     height: 100%;
-    padding: 0.7rem 1rem;
+    padding: 0 1rem;
     border-left: 1px solid var(--line);
     overflow: hidden;
     isolation: isolate;
@@ -118,25 +116,14 @@ const { current } = Astro.props;
   }
   .tile[aria-current='page'] { color: var(--white); }
   .tile[aria-current='page']::before { background: var(--red); transform: scaleY(1); }
-  .tile-no { opacity: 0.6; }
 
   /* ── 태블릿 이하 ───────────────────────────── */
   @media (max-width: 760px) {
     .home { width: var(--h); margin-left: 0; }
-    .home-square { width: 1.5rem; }
+    .home-square { width: 1rem; }
     nav { flex: 1; }
     .tiles { width: 100%; }
-    .tile {
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4em;
-      padding: 0 0.5rem;
-    }
-    .tile-label { letter-spacing: 0.08em; }
-  }
-  @media (max-width: 420px) {
-    .tile-no { display: none; }
-    .tile-label { letter-spacing: 0.08em; }
+    .tile { justify-content: center; padding: 0 0.5rem; }
+    .tile-label { letter-spacing: 0.12em; }
   }
 </style>
