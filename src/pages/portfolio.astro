@@ -36,7 +36,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     </header>
 
     <section class="carousel" aria-roledescription="carousel" aria-label="작품">
-      <ol class="track" data-track tabindex="0" aria-label="작품 목록 — 좌우 화살표로 넘기기">
+      <ol class="track" data-track data-lenis-prevent tabindex="0" aria-label="작품 목록 — 좌우 화살표로 넘기기">
         {items.map((w, i) => (
           <li class="slide" data-slide data-type={w.type}
               aria-roledescription="slide" aria-label={`${pad(i + 1)} / ${pad(items.length)}`}>
@@ -147,6 +147,25 @@ const pad = (n: number) => String(n).padStart(2, '0');
       if (ev.key === 'ArrowRight') { ev.preventDefault(); goTo(indexNow() + 1); }
       if (ev.key === 'ArrowLeft') { ev.preventDefault(); goTo(indexNow() - 1); }
     });
+
+    /* ── 휠로 넘기기 ──
+     * 가로 스와이프(트랙패드)는 브라우저 기본 스크롤 + 스냅이 처리한다(data-lenis-prevent 로 Lenis 제외).
+     * 세로 휠(마우스)은 한 번 굴릴 때마다 한 장씩. 처음/끝에서는 페이지 스크롤로 넘긴다. */
+    let wheelAcc = 0, wheelLock = 0;
+    track.addEventListener('wheel', (ev) => {
+      if (Math.abs(ev.deltaX) >= Math.abs(ev.deltaY)) return;
+      const list = visible();
+      const i = indexNow();
+      const dir = Math.sign(ev.deltaY);
+      if ((dir < 0 && i <= 0) || (dir > 0 && i >= list.length - 1)) return;
+      ev.preventDefault();
+      if (performance.now() < wheelLock) return;
+      wheelAcc += ev.deltaY;
+      if (Math.abs(wheelAcc) < 40) return;
+      goTo(i + dir);
+      wheelAcc = 0;
+      wheelLock = performance.now() + 420;
+    }, { passive: false });
 
     /* ── 마우스 드래그로 넘기기 ── */
     let dragging = false, moved = 0, sx = 0, sl = 0;
