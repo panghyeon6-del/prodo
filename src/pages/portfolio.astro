@@ -1,7 +1,7 @@
 ---
-// 포트폴리오 — 한 가지 일: 작품을 본다.
-// 지금 보고 있는(가운데에 온 / 마우스를 올린) 작품의 색이 배경 뒤로 번지고,
-// 페이지 키컬러가 그 색으로 살짝 물든다.
+// 포트폴리오 — 한 가지 일: 작품을 한 장씩 넘겨 본다.
+// 가로 캐러셀(정사각형). 지금 맨 앞에 선 작품의 색이 배경 뒤로 번지고 페이지 키컬러가 물든다.
+// 넘기기: 화살표 버튼 · 키보드 ←→ · 스와이프 · 마우스 드래그 · 트랙패드 가로 스크롤
 import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Doodle from '../components/Doodle.astro';
@@ -11,28 +11,28 @@ import { TYPES, WORKS } from '../data/portfolio';
 const route = getRoute('portfolio');
 const count = (k: string) => (k === 'all' ? WORKS.length : WORKS.filter((w) => w.type === k).length);
 const types = TYPES.filter((t) => count(t.key) > 0);
-const items = WORKS.map((w) => {
-  const [a, b] = w.image ? [w.image.width, w.image.height] : (w.ratio ?? '4/5').split('/').map(Number);
-  const widths = w.image ? [...[400, 800, 1200].filter((x) => x < w.image!.width), w.image.width] : [];
-  return { ...w, ar: `${a}/${b}`, r: a / b, widths, color: w.color ?? '#b5b0a8' };
-});
+const typeLabel = Object.fromEntries(TYPES.map((t) => [t.key, t.label]));
+const items = WORKS.map((w) => ({
+  ...w,
+  widths: w.image ? [...[400, 800, 1200].filter((x) => x < w.image!.width), w.image.width] : [],
+  color: w.color ?? '#b5b0a8',
+}));
+const pad = (n: number) => String(n).padStart(2, '0');
 ---
 
 <Base route="portfolio" title="Portfolio">
   <!-- 배경에 번지는 앰비언트 레이어 (두 장을 교차) -->
-  <div class="ambient" aria-hidden="true" data-ambient>
+  <div class="ambient" aria-hidden="true">
     <div class="amb" data-amb></div>
     <div class="amb" data-amb></div>
   </div>
 
   <div class="page" data-page="portfolio">
     <header class="head wrap">
-      <p class="t-label"><span class="dash">{route.no}</span> {route.ko}</p>
       <h1 class="t-display title">
-        {route.label}<sup class="count" data-count>({WORKS.length})</sup>
+        {route.label}<sup class="count" data-count>({items.length})</sup>
         <Doodle shape="squiggle" class="title-squiggle" draw />
       </h1>
-
       <div class="filters" role="group" aria-label="종류별 보기">
         {types.map((t, i) => (
           <button class="chip t-label" data-filter={t.key} aria-pressed={i === 0 ? 'true' : 'false'}>
@@ -42,39 +42,54 @@ const items = WORKS.map((w) => {
       </div>
     </header>
 
-    <ul class="works wrap" data-works>
-      {items.map((w, i) => (
-        <li class="work" data-type={w.type} data-color={w.color}>
-          <button class="work-btn" data-open={i} data-cursor-label="View"
-                  aria-label={`${w.title} 크게 보기`}>
-            <span class="media" style={`aspect-ratio:${w.ar}; --c:${w.color}; --r:${w.r.toFixed(4)}`}>
+    <section class="carousel" aria-roledescription="carousel" aria-label="작품">
+      <ol class="track" data-track tabindex="0" aria-label="작품 목록 — 좌우 화살표로 넘기기">
+        {items.map((w, i) => (
+          <li class="slide" data-slide data-type={w.type} data-color={w.color}
+              aria-roledescription="slide" aria-label={`${pad(i + 1)} / ${pad(items.length)}`}>
+            <button class="media" data-open data-cursor-label="View" aria-label={`${w.title} 크게 보기`}
+                    style={`--c:${w.color}`}>
               {w.image ? (
                 <Image src={w.image} alt={w.title} widths={w.widths}
-                       sizes="(max-width: 560px) 100vw, (max-width: 1000px) 50vw, 33vw" loading={i < 3 ? 'eager' : 'lazy'} />
+                       sizes="(max-width: 640px) 84vw, 44vw" loading={i < 3 ? 'eager' : 'lazy'}
+                       style={`object-position:${w.focus ?? 'center'}`} draggable="false" />
               ) : (
-                <span class="t-label media-ph">{w.type} — {w.ar}</span>
+                <span class="t-label media-ph">{w.title}</span>
               )}
-            </span>
-          </button>
-          <div class="work-meta">
-            <span class="t-label">{String(i + 1).padStart(2, '0')}</span>
-            <h2 class="work-title">{w.title}</h2>
-            <span class="t-label t-muted">{w.type}{w.year && ` / ${w.year}`}</span>
-          </div>
-        </li>
-      ))}
-    </ul>
+            </button>
+            <div class="meta">
+              <span class="t-label no" data-no>{pad(i + 1)}</span>
+              <h2 class="work-title">{w.title}</h2>
+              <span class="t-label t-muted kind">{typeLabel[w.type]}{w.year && ` / ${w.year}`}</span>
+            </div>
+            <p class="desc">{w.desc}</p>
+          </li>
+        ))}
+      </ol>
+
+      <button class="arrow prev" data-prev aria-label="이전 작품" data-dark>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
+      </button>
+      <button class="arrow next" data-next aria-label="다음 작품" data-dark>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
+      </button>
+
+      <div class="status wrap">
+        <span class="t-label" aria-live="polite"><span data-cur>01</span> / <span data-total>{pad(items.length)}</span></span>
+        <span class="progress" aria-hidden="true"><span data-progress></span></span>
+      </div>
+    </section>
   </div>
 
-  <!-- 크게 보기 -->
+  <!-- 크게 보기 (원본 비율) -->
   <dialog class="viewer" data-viewer data-dark aria-label="작품 보기">
     <div class="viewer-stage" data-viewer-stage></div>
     <div class="viewer-bar">
       <p class="t-label" data-viewer-caption></p>
       <div class="viewer-ctrl">
-        <button class="t-label" data-prev aria-label="이전">← Prev</button>
-        <button class="t-label" data-next aria-label="다음">Next →</button>
-        <button class="t-label viewer-close" data-close aria-label="닫기">Close ✕</button>
+        <button class="t-label" data-vprev aria-label="이전">← Prev</button>
+        <button class="t-label" data-vnext aria-label="다음">Next →</button>
+        <button class="t-label" data-close aria-label="닫기">Close ✕</button>
       </div>
     </div>
   </dialog>
@@ -103,132 +118,193 @@ const items = WORKS.map((w) => {
   document.addEventListener('motion:ready', (e) => {
     const root = document.querySelector<HTMLElement>('[data-page="portfolio"]');
     if (!root) return;
-    const { gsap, ScrollTrigger, reduced, cleanup } = (e as MotionEvent).detail;
+    const { gsap, reduced, cleanup } = (e as MotionEvent).detail;
 
-    const items = gsap.utils.toArray<HTMLElement>('.work', root);
+    const track = root.querySelector<HTMLElement>('[data-track]')!;
+    const slides = gsap.utils.toArray<HTMLElement>('[data-slide]', root);
+    const prevBtn = root.querySelector<HTMLButtonElement>('[data-prev]')!;
+    const nextBtn = root.querySelector<HTMLButtonElement>('[data-next]')!;
+    const curEl = root.querySelector<HTMLElement>('[data-cur]')!;
+    const totalEl = root.querySelector<HTMLElement>('[data-total]')!;
+    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
+    const progress = root.querySelector<HTMLElement>('[data-progress]')!;
     const ambs = gsap.utils.toArray<HTMLElement>('[data-amb]');
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    /* ── 배경 번짐 ── */
     let front = 0;
     let current: HTMLElement | null = null;
 
-    // 실제 이미지가 있으면 평균색으로 키컬러를 덮어쓴다
-    items.forEach((li) => {
+    // 이미지 평균색을 키컬러로
+    slides.forEach((li) => {
       const img = li.querySelector('img');
       if (!img) return;
-      const apply = () => { const c = averageColor(img); if (c) li.dataset.color = c; };
+      const apply = () => { const c = averageColor(img); if (c) li.dataset.color = c; if (li === current) paint(li); };
       if (img.complete) apply(); else img.addEventListener('load', apply, { once: true });
     });
 
-    /* ── 앰비언트: 활성 작품의 색/이미지가 뒤로 번진다 ── */
-    function setActive(li: HTMLElement | null) {
-      if (li === current) return;
-      current = li;
-      items.forEach((it) => it.classList.toggle('is-active', it === li));
+    function paint(li: HTMLElement | null) {
       const color = li?.dataset.color;
-      document.body.style.setProperty(
-        '--key',
-        color ? `color-mix(in oklab, var(--paper) 84%, ${color})` : 'var(--paper)',
-      );
+      document.body.style.setProperty('--key', color ? `color-mix(in oklab, var(--paper) 86%, ${color})` : 'var(--paper)');
       const next = ambs[1 - front];
-      const prev = ambs[front];
       if (li && color) {
         const img = li.querySelector('img');
         next.style.backgroundColor = color;
         next.style.backgroundImage = img ? `url("${img.currentSrc || img.src}")` : '';
         next.classList.add('is-on');
       }
-      prev.classList.remove('is-on');
-      front = li ? 1 - front : front;
+      ambs[front].classList.remove('is-on');
+      front = 1 - front;
     }
 
-    // 스크롤: 화면 가운데에 걸친 작품이 활성
-    items.forEach((li) => {
-      ScrollTrigger.create({
-        trigger: li,
-        start: 'top 60%',
-        end: 'bottom 40%',
-        onToggle: (self) => { if (self.isActive) setActive(li); },
-      });
-    });
-    // 마우스: 올린 작품이 우선
-    const onEnter = (ev: Event) => setActive(ev.currentTarget as HTMLElement);
-    if (matchMedia('(hover: hover)').matches) {
-      items.forEach((li) => li.addEventListener('pointerenter', onEnter));
+    /* ── 위치 계산 ── */
+    const visible = () => slides.filter((s) => !s.hidden);
+    const startPad = () => parseFloat(getComputedStyle(track).scrollPaddingLeft) || 0;
+    const indexNow = () => {
+      const list = visible();
+      const x = track.scrollLeft + startPad();
+      let best = 0, bestD = Infinity;
+      list.forEach((s, i) => { const d = Math.abs(s.offsetLeft - x); if (d < bestD) { bestD = d; best = i; } });
+      return best;
+    };
+    const goTo = (i: number) => {
+      const list = visible();
+      const t = list[Math.max(0, Math.min(list.length - 1, i))];
+      if (t) track.scrollTo({ left: t.offsetLeft - startPad(), behavior: reduced ? 'auto' : 'smooth' });
+    };
+
+    let idx = -1;
+    function update() {
+      const list = visible();
+      const i = indexNow();
+      prevBtn.disabled = i <= 0;
+      nextBtn.disabled = i >= list.length - 1;
+      const max = Math.max(1, track.scrollWidth - track.clientWidth);
+      progress.style.transform = `scaleX(${Math.min(1, (track.scrollLeft + track.clientWidth) / (max + track.clientWidth))})`;
+      if (i === idx) return;
+      idx = i;
+      curEl.textContent = pad(i + 1);
+      totalEl.textContent = pad(list.length);
+      slides.forEach((s) => s.classList.toggle('is-current', s === list[i]));
+      current = list[i] ?? null;
+      paint(current);
     }
-    cleanup(() => setActive(null));
+    let raf = 0;
+    track.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); }, { passive: true });
+    window.addEventListener('resize', update);
+    cleanup(() => { window.removeEventListener('resize', update); paint(null); });
+
+    prevBtn.addEventListener('click', () => goTo(indexNow() - 1));
+    nextBtn.addEventListener('click', () => goTo(indexNow() + 1));
+    track.addEventListener('keydown', (ev) => {
+      if (ev.key === 'ArrowRight') { ev.preventDefault(); goTo(indexNow() + 1); }
+      if (ev.key === 'ArrowLeft') { ev.preventDefault(); goTo(indexNow() - 1); }
+    });
+
+    /* ── 마우스 드래그로 넘기기 ── */
+    let dragging = false, moved = 0, sx = 0, sl = 0;
+    track.addEventListener('pointerdown', (ev) => {
+      if (ev.pointerType !== 'mouse' || ev.button !== 0) return;
+      dragging = true; sx = ev.clientX; sl = track.scrollLeft;
+    });
+    const onDragMove = (ev: PointerEvent) => {
+      if (!dragging) return;
+      moved = Math.max(moved, Math.abs(ev.clientX - sx));
+      if (moved <= 6) return; // 이 정도는 클릭으로 본다
+      track.classList.add('is-dragging');
+      track.scrollLeft = sl - (ev.clientX - sx);
+    };
+    const onDragEnd = (ev: PointerEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      track.classList.remove('is-dragging');
+      window.setTimeout(() => (moved = 0), 0); // 드래그 직후의 click 한 번만 막고 초기화
+      if (moved <= 6) return;
+      const dx = ev.clientX - sx;
+      const base = Math.round(indexNow());
+      goTo(Math.abs(dx) > 60 ? (dx < 0 ? Math.max(base, idx + 1) : Math.min(base, idx - 1)) : base);
+    };
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', onDragEnd);
+    cleanup(() => { window.removeEventListener('pointermove', onDragMove); window.removeEventListener('pointerup', onDragEnd); });
+    // 드래그 끝에 클릭이 같이 일어나면 무시
+    track.addEventListener('click', (ev) => { if (moved > 6) { ev.stopPropagation(); ev.preventDefault(); } }, true);
 
     /* ── 필터 ── */
     const chips = gsap.utils.toArray<HTMLButtonElement>('[data-filter]', root);
-    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
     chips.forEach((chip) =>
       chip.addEventListener('click', () => {
         const key = chip.dataset.filter!;
         chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
-        const shown = items.filter((li) => {
-          const on = key === 'all' || li.dataset.type === key;
-          li.hidden = !on;
-          return on;
-        });
+        const shown = slides.filter((li) => { const on = key === 'all' || li.dataset.type === key; li.hidden = !on; return on; });
+        shown.forEach((li, i) => (li.querySelector('[data-no]')!.textContent = pad(i + 1)));
         countEl.textContent = `(${shown.length})`;
-        if (!reduced) gsap.fromTo(shown, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.05, ease: 'expo.out' });
-        ScrollTrigger.refresh();
+        track.scrollLeft = 0;
+        idx = -1;
+        update();
+        if (!reduced) gsap.fromTo(shown.slice(0, 4), { autoAlpha: 0, x: 40 }, { autoAlpha: 1, x: 0, duration: 0.7, stagger: 0.06, ease: 'expo.out', clearProps: 'opacity,visibility,transform' });
       }),
     );
 
     /* ── 등장 ── */
+    update();
     if (!reduced) {
-      gsap.from('.title', { yPercent: 40, autoAlpha: 0, duration: 1, ease: 'expo.out' });
-      items.forEach((li) =>
-        gsap.from(li, {
-          y: 60, autoAlpha: 0, duration: 1, ease: 'expo.out',
-          scrollTrigger: { trigger: li, start: 'top 95%', once: true },
-        }),
-      );
+      gsap.timeline({ defaults: { ease: 'expo.out' } })
+        .from('.title', { yPercent: 40, autoAlpha: 0, duration: 1 })
+        .from('.chip', { y: 12, autoAlpha: 0, duration: 0.6, stagger: 0.05 }, 0.2)
+        // 끝나면 인라인 스타일을 지워 CSS(현재 작품 강조, 비활성 화살표 숨김)가 다시 맡게 한다
+        .from(slides.slice(0, 4), { x: 80, autoAlpha: 0, duration: 1.1, stagger: 0.08, clearProps: 'opacity,visibility,transform' }, 0.2)
+        .from(['.arrow', '.status'], { autoAlpha: 0, duration: 0.6, clearProps: 'opacity,visibility' }, 0.8);
     }
 
-    /* ── 크게 보기 ── */
+    /* ── 크게 보기 (원본 비율) ── */
     const dialog = document.querySelector<HTMLDialogElement>('[data-viewer]')!;
     const stage = dialog.querySelector<HTMLElement>('[data-viewer-stage]')!;
     const caption = dialog.querySelector<HTMLElement>('[data-viewer-caption]')!;
-    let idx = 0;
-
-    const visible = () => items.filter((li) => !li.hidden);
+    let vi = 0;
     function show(i: number) {
       const list = visible();
-      idx = (i + list.length) % list.length;
-      const li = list[idx];
-      const media = li.querySelector('.media')!.cloneNode(true) as HTMLElement;
-      const img = media.querySelector('img');
-      if (img) { img.loading = 'eager'; img.sizes = '100vw'; }
-      stage.replaceChildren(media);
-      const title = li.querySelector('.work-title')!.textContent;
-      const meta = li.querySelector('.work-meta .t-muted')!.textContent;
-      caption.textContent = `${String(idx + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')} — ${title} — ${meta}`;
-      setActive(li);
-      if (!reduced) gsap.fromTo(media, { autoAlpha: 0, scale: 0.97 }, { autoAlpha: 1, scale: 1, duration: 0.5, ease: 'expo.out' });
+      vi = (i + list.length) % list.length;
+      const li = list[vi];
+      const src = li.querySelector('img');
+      const img = new Image();
+      if (src) { img.src = src.currentSrc || src.src; img.srcset = src.srcset; img.sizes = '100vw'; img.alt = src.alt; }
+      stage.replaceChildren(img);
+      caption.textContent = `${pad(vi + 1)} / ${pad(list.length)} — ${li.querySelector('.work-title')!.textContent}`;
+      if (!reduced) gsap.fromTo(img, { autoAlpha: 0, scale: 0.97 }, { autoAlpha: 1, scale: 1, duration: 0.5, ease: 'expo.out' });
     }
     root.querySelectorAll<HTMLButtonElement>('[data-open]').forEach((btn) =>
       btn.addEventListener('click', () => {
-        const li = btn.closest<HTMLElement>('.work')!;
-        show(visible().indexOf(li));
+        const li = btn.closest<HTMLElement>('[data-slide]')!;
+        const list = visible();
+        // 맨 앞 작품이 아니면 먼저 그 작품으로 넘기고, 맨 앞이면 크게 본다
+        if (li !== list[indexNow()]) { goTo(list.indexOf(li)); return; }
+        show(list.indexOf(li));
         dialog.showModal();
       }),
     );
-    dialog.querySelector('[data-prev]')!.addEventListener('click', () => show(idx - 1));
-    dialog.querySelector('[data-next]')!.addEventListener('click', () => show(idx + 1));
+    dialog.querySelector('[data-vprev]')!.addEventListener('click', () => show(vi - 1));
+    dialog.querySelector('[data-vnext]')!.addEventListener('click', () => show(vi + 1));
     dialog.querySelector('[data-close]')!.addEventListener('click', () => dialog.close());
     dialog.addEventListener('click', (ev) => { if (ev.target === dialog || ev.target === stage) dialog.close(); });
+    dialog.addEventListener('close', () => goTo(vi));
     const onKey = (ev: KeyboardEvent) => {
-      if (!dialog.open) return;
-      if (ev.key === 'ArrowLeft') show(idx - 1);
-      if (ev.key === 'ArrowRight') show(idx + 1);
+      if (dialog.open) {
+        if (ev.key === 'ArrowLeft') show(vi - 1);
+        if (ev.key === 'ArrowRight') show(vi + 1);
+        return;
+      }
+      // 트랙에 포커스가 없어도 ←→ 로 넘기기
+      if (document.activeElement === track || (ev.target as HTMLElement).closest('input, textarea')) return;
+      if (ev.key === 'ArrowRight') goTo(indexNow() + 1);
+      if (ev.key === 'ArrowLeft') goTo(indexNow() - 1);
     };
     document.addEventListener('keydown', onKey);
-    // 스와이프
-    let sx = 0;
-    stage.addEventListener('touchstart', (ev) => { sx = ev.touches[0].clientX; }, { passive: true });
+    let tx = 0;
+    stage.addEventListener('touchstart', (ev) => { tx = ev.touches[0].clientX; }, { passive: true });
     stage.addEventListener('touchend', (ev) => {
-      const dx = ev.changedTouches[0].clientX - sx;
-      if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1));
+      const dx = ev.changedTouches[0].clientX - tx;
+      if (Math.abs(dx) > 50) show(vi + (dx < 0 ? 1 : -1));
     });
     cleanup(() => { document.removeEventListener('keydown', onKey); if (dialog.open) dialog.close(); });
   });
@@ -236,13 +312,7 @@ const items = WORKS.map((w) => {
 
 <style>
   /* ── 앰비언트 ───────────────────────────── */
-  .ambient {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-  }
+  .ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
   .amb {
     position: absolute;
     inset: -15%;
@@ -252,36 +322,26 @@ const items = WORKS.map((w) => {
     opacity: 0;
     transform: scale(1.05);
     transition: opacity 1.2s linear, transform 2.4s var(--ease-out);
-    /* 색 박스일 때: 가운데가 진하고 바깥으로 빠지는 덩어리 */
     mask-image: radial-gradient(closest-side, #000 30%, transparent);
   }
-  .amb:global(.is-on) { opacity: 0.38; transform: scale(1); }
+  .amb:global(.is-on) { opacity: 0.32; transform: scale(1); }
 
-  .page { position: relative; z-index: 1; }
+  .page { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; min-width: 0; }
 
   /* ── 머리 ───────────────────────────────── */
   .head {
-    display: grid;
-    gap: 1.25rem;
-    padding-block: clamp(2rem, 6vw, 5rem) clamp(1.5rem, 3vw, 2.5rem);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem 2rem;
+    padding-block: clamp(1.75rem, 5svh, 3.5rem) clamp(2.5rem, 5svh, 3.5rem);
   }
-  .title { position: relative; width: fit-content; font-size: min(var(--fs-display), 15vw); }
-  .count {
-    font-size: 0.22em;
-    font-weight: var(--w-text);
-    letter-spacing: 0;
-    vertical-align: top;
-    margin-left: 0.2em;
-  }
-  .head :global(.title-squiggle) {
-    position: absolute;
-    left: 0;
-    bottom: -0.25em;
-    width: 0.9em;
-    color: var(--red);
-  }
+  .title { position: relative; font-size: min(var(--fs-display), 15vw, 15svh); }
+  .count { font-size: 0.22em; font-weight: var(--w-text); letter-spacing: 0; vertical-align: top; margin-left: 0.2em; }
+  .head :global(.title-squiggle) { position: absolute; left: 0; bottom: -0.3em; width: 0.9em; color: var(--red); }
 
-  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .chip {
     display: inline-flex;
     align-items: center;
@@ -294,58 +354,132 @@ const items = WORKS.map((w) => {
   }
   .chip-n { opacity: 0.55; }
   .chip[aria-pressed='true'] { background: var(--ink); color: var(--white); }
-  @media (hover: hover) {
-    .chip:hover { rotate: -3deg; }
-  }
+  @media (hover: hover) { .chip:hover { rotate: -3deg; } }
 
-  /* ── 작품 (메이슨리) ────────────────────── */
-  .works {
-    list-style: none;
-    columns: 3;
-    column-gap: clamp(1rem, 2.5vw, 2.5rem);
-    padding-bottom: clamp(3rem, 8vw, 6rem);
+  /* ── 캐러셀 ─────────────────────────────── */
+  .carousel {
+    --size: min(40vw, calc(100svh - var(--nav-h) - 22.5rem));
+    --gap: clamp(1rem, 2vw, 1.75rem);
+    position: relative;
+    min-width: 0; /* flex 자식이 내용 폭만큼 늘어나지 않게 → 트랙이 스크롤됨 */
+    padding-bottom: clamp(2rem, 6svh, 4rem);
   }
-  .work {
-    break-inside: avoid;
-    margin-bottom: clamp(1.75rem, 3.5vw, 3rem);
+  .track {
+    list-style: none;
+    display: flex;
+    gap: var(--gap);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: max(var(--gutter), env(safe-area-inset-left));
+    padding-inline: max(var(--gutter), env(safe-area-inset-left));
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+    cursor: grab;
+    outline-offset: -2px;
+  }
+  .track::-webkit-scrollbar { display: none; }
+  .track::after { content: ''; flex: 0 0 calc(100vw - var(--size) - 2 * var(--gutter)); } /* 마지막 작품도 맨 앞에 설 수 있게 */
+  .track:global(.is-dragging) { scroll-snap-type: none; cursor: grabbing; user-select: none; }
+  .track:global(.is-dragging) .media { pointer-events: none; }
+
+  .slide {
+    flex: 0 0 var(--size);
+    scroll-snap-align: start;
+    display: grid;
+    align-content: start;
+    gap: 0.6rem;
     transition: opacity var(--dur) linear;
   }
-  @media (hover: hover) {
-    .works:has(.work:hover) .work:not(:hover) { opacity: 0.45; }
-  }
-  .work-btn { display: block; width: 100%; text-align: left; }
+  .slide:not(:global(.is-current)) { opacity: 0.55; }
+  .slide:global(.is-current) { opacity: 1; }
+
   .media {
     position: relative;
     display: block;
     width: 100%;
+    aspect-ratio: 1;
     overflow: hidden;
     background: var(--c);
-    transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--ease-out);
   }
-  .media :global(img) { width: 100%; height: 100%; object-fit: cover; }
-  .media-ph {
-    position: absolute;
-    left: 0.9rem;
-    top: 0.9rem;
-    color: var(--white);
-    opacity: 0.75;
+  .media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.9s var(--ease-out);
+    -webkit-user-drag: none;
   }
   @media (hover: hover) {
-    .work:nth-child(odd) .work-btn:hover .media { transform: rotate(-1.6deg) scale(1.02); }
-    .work:nth-child(even) .work-btn:hover .media { transform: rotate(1.6deg) scale(1.02); }
+    .slide:global(.is-current) .media:hover :global(img) { transform: scale(1.03); }
   }
-  .work-meta {
+  .media-ph { position: absolute; left: 0.9rem; top: 0.9rem; color: var(--white); }
+
+  .meta {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: baseline;
     gap: 0.75rem;
-    padding-top: 0.75rem;
+    padding-top: 0.4rem;
   }
   .work-title { font-size: var(--fs-body); font-weight: var(--w-title); letter-spacing: -0.01em; }
-  .work:global(.is-active) .work-title { color: var(--red); }
+  .slide:global(.is-current) .work-title { color: var(--red); }
+  .desc { font-size: 0.875rem; line-height: 1.55; color: var(--ink-soft); max-width: 34em; }
 
-  @media (max-width: 1000px) { .works { columns: 2; } }
-  @media (max-width: 560px)  { .works { columns: 1; } }
+  /* 이전/다음 — 이미지 세로 가운데의 검정 네모 */
+  .arrow {
+    position: absolute;
+    top: calc(var(--size) / 2);
+    translate: 0 -50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    background: var(--ink);
+    color: var(--white);
+    transition: opacity var(--dur-fast), transform var(--dur) var(--ease-spring);
+  }
+  .arrow svg { width: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .prev { left: max(var(--gutter), env(safe-area-inset-left)); }
+  .next { right: max(var(--gutter), env(safe-area-inset-right)); }
+  .arrow:disabled { opacity: 0; pointer-events: none; }
+  @media (hover: hover) {
+    .prev:hover { transform: translateX(-3px); }
+    .next:hover { transform: translateX(3px); }
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: clamp(1.25rem, 3svh, 2rem);
+  }
+  .progress { flex: 1; max-width: 16rem; height: 1px; background: var(--line); position: relative; }
+  .progress span {
+    position: absolute;
+    inset: -1px 0;
+    background: var(--ink);
+    transform-origin: left;
+    transition: transform 0.3s var(--ease-out);
+  }
+
+  /* ── 폰 ─────────────────────────────────── */
+  @media (max-width: 640px) {
+    .carousel { --size: 84vw; }
+    .arrow { width: 2.75rem; height: 2.75rem; }
+    .head { align-items: flex-start; flex-direction: column; }
+  }
+  /* 터치 기기는 스와이프가 기본이라 버튼을 작게 */
+  @media (hover: none) {
+    .arrow { opacity: 0.85; }
+  }
+  /* 높이가 낮은 화면(가로 폰) */
+  @media (max-height: 520px) and (orientation: landscape) {
+    .carousel { --size: min(40vw, calc(100svh - var(--nav-h) - 6rem)); }
+    .head { padding-block: 1rem; }
+    .title { font-size: 2.5rem; }
+    .head :global(.title-squiggle) { display: none; }
+  }
 
   /* ── 크게 보기 ───────────────────────────── */
   .viewer {
@@ -356,7 +490,7 @@ const items = WORKS.map((w) => {
     margin: 0;
     border: 0;
     padding: 0;
-    background: color-mix(in oklab, var(--ink) 92%, transparent);
+    background: color-mix(in oklab, var(--ink) 94%, transparent);
     color: var(--white);
     display: none;
     flex-direction: column;
@@ -371,10 +505,7 @@ const items = WORKS.map((w) => {
     padding: clamp(1rem, 4vw, 3rem);
     padding-top: max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-top));
   }
-  /* 화면 안에 비율 그대로 꽉 차게: 폭과 (높이×비율) 중 작은 쪽 */
-  .viewer-stage :global(.media) {
-    width: min(100%, calc((100dvh - 9rem) * var(--r)));
-  }
+  .viewer-stage :global(img) { max-width: 100%; max-height: calc(100dvh - 9rem); width: auto; height: auto; object-fit: contain; }
   .viewer-bar {
     display: flex;
     flex-wrap: wrap;
