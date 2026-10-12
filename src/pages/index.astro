@@ -5,7 +5,7 @@ import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Doodle from '../components/Doodle.astro';
 import Stripe from '../components/Stripe.astro';
-import { CONTACTS } from '../lib/site';
+import { CONTACTS, HERO } from '../lib/site';
 import me from '../assets/me.jpg';
 
 const name = '프로도';
@@ -28,8 +28,9 @@ const email = CONTACTS.find((c) => c.copy)!;
     </div>
 
     <!-- 가운데: 대표 이미지 -->
-    <figure class="frame" data-frame>
+    <figure class="frame" data-frame data-mode={HERO.mode} data-model={HERO.model}>
       <div class="art" data-art>
+        <div class="stage3d" data-stage aria-hidden="true"></div>
         <Image src={me} alt="프로도 자화상 — 곱슬머리에 흰 티셔츠, 펜을 든 그림" widths={[480, 720, 1000, 1400]}
                sizes="(max-width: 760px) 80vw, 30vw" loading="eager" fetchpriority="high" />
       </div>
@@ -101,8 +102,26 @@ const email = CONTACTS.find((c) => c.copy)!;
     const art = root.querySelector<HTMLElement>('[data-art]')!;
     const hello = root.querySelector<HTMLElement>('[data-hello]')!;
     gsap.set(hello, { autoAlpha: 0, scale: 0.4 });
+    // 3D 모드: three.js 를 이때만 받아온다. 실패하면 그림이 그대로 남는다.
+    // ?3d → 3D 미리보기, ?3d=models/test.fbx → 그 파일로 미리보기 (설정 파일을 안 고치고 확인할 때)
+    const q = new URLSearchParams(location.search);
+    const want3d = frame.dataset.mode === '3d' || q.has('3d');
+    let stage: import('../scripts/stage3d').Stage | null = null;
+    if (want3d) {
+      import('../scripts/stage3d')
+        .then(({ mountStage }) => mountStage(root.querySelector<HTMLElement>('[data-stage]')!, { model: q.get('3d') || frame.dataset.model || undefined, reduced }))
+        .then((s) => {
+          if (!root.isConnected) { s.destroy(); return; }
+          stage = s;
+          frame.classList.add('is-3d');
+        })
+        .catch((err) => console.warn('3D 모델을 불러오지 못해 그림으로 대신합니다', err));
+      cleanup(() => stage?.destroy());
+    }
+
     const wave = () => {
-      if (!reduced) {
+      if (stage) stage.wave();
+      else if (!reduced) {
         gsap.fromTo(art, { rotate: 0 }, {
           keyframes: { rotate: [0, -4, 3, -2, 1, 0] }, duration: 1, ease: 'sine.inOut',
           transformOrigin: '50% 100%', overwrite: 'auto',
@@ -143,7 +162,8 @@ const email = CONTACTS.find((c) => c.copy)!;
       const f = frame.getBoundingClientRect();
       const nx = (ev.clientX - (f.left + f.width / 2)) / window.innerWidth;
       const ny = (ev.clientY - (f.top + f.height / 2)) / window.innerHeight;
-      ry(nx * 14); rx(-ny * 10);
+      if (stage) stage.point(nx * 2.4, ny * 2.4);
+      else { ry(nx * 14); rx(-ny * 10); }
 
       for (const s of setters) {
         const b = s.el.getBoundingClientRect();
@@ -218,7 +238,10 @@ const email = CONTACTS.find((c) => c.copy)!;
     cursor: pointer;
   }
   .art { position: relative; z-index: 1; aspect-ratio: 1600 / 2134; }
-  .art :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .art :global(img) { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.6s linear; }
+  .stage3d { position: absolute; inset: -12%; z-index: 1; pointer-events: none; }
+  .stage3d :global(canvas) { width: 100% !important; height: 100% !important; display: block; }
+  .frame:global(.is-3d) .art :global(img) { opacity: 0; }
 
   .cross { position: absolute; z-index: 2; width: 14px; height: 14px; transition: translate var(--dur) var(--ease-spring); }
   .cross { filter: url(#boil); }

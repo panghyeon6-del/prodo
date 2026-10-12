@@ -29,6 +29,15 @@ export const CONTACTS = [
   { label: 'YouTube', value: '@channel', href: 'https://youtube.com/' },
 ];
 
+// 랜딩 가운데 대표 비주얼.
+//   mode 'image' — 자화상 그림 (src/assets/me.jpg)
+//   mode '3d'    — 3D 모델. model 에 public/ 기준 경로(.glb 권장 / .fbx 가능). 비우면 빨간 상자 자리표시
+// 주소 뒤에 ?3d 를 붙이면 설정과 상관없이 3D 로 미리볼 수 있다. ?3d=models/파일.fbx 처럼 파일도 지정 가능.
+export const HERO: { mode: 'image' | '3d'; model: string } = {
+  mode: 'image',
+  model: '', // 예: 'models/frodo.glb'
+};
+
 export const NAV_ROUTES = ROUTES.filter((r) => r.key !== 'home');
 
 export const getRoute = (key: Route['key']) => ROUTES.find((r) => r.key === key)!;
