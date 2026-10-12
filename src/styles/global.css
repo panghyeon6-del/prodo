@@ -168,51 +168,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
 }
 
-/* ── 커스텀 커서 (마우스 기기 + JS 활성 시) ─── */
-.cursor {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 200;
-  pointer-events: none;
-  color: var(--ink);
-  opacity: 0;
-  transition: opacity var(--dur-fast), color var(--dur-fast);
-}
-.has-cursor .cursor { opacity: 1; }
-.cursor-cross {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  translate: -50% -50%;
-  filter: url(#boil);
-  transition: scale var(--dur) var(--ease-spring), rotate var(--dur) var(--ease-spring);
-}
-.cursor-cross::before,
-.cursor-cross::after {
-  content: '';
-  position: absolute;
-  background: currentColor;
-}
-.cursor-cross::before { left: 50%; top: 0; bottom: 0; width: 1.5px; translate: -50% 0; }
-.cursor-cross::after { top: 50%; left: 0; right: 0; height: 1.5px; translate: 0 -50%; }
-.cursor-label {
-  position: absolute;
-  left: 18px;
-  top: 14px;
-  white-space: nowrap;
-  font-size: 0.625rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-.cursor.is-link .cursor-cross { scale: 1.6; rotate: 45deg; }
-.cursor.is-down .cursor-cross { scale: 0.7; }
-.cursor.on-dark { color: var(--white); }
-
-@media (hover: hover) and (pointer: fine) {
-  .has-cursor, .has-cursor a, .has-cursor button, .has-cursor [data-cursor] { cursor: none; }
-}
-
 /* ── 모션 접근성 ─────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

@@ -40,7 +40,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
         {items.map((w, i) => (
           <li class="slide" data-slide data-type={w.type}
               aria-roledescription="slide" aria-label={`${pad(i + 1)} / ${pad(items.length)}`}>
-            <button class="media" data-open data-cursor-label="View" aria-label={`${w.title} 크게 보기`}
+            <button class="media" data-open aria-label={`${w.title} 크게 보기`}
                     style={`--c:${w.color}`}>
               {w.image ? (
                 <Image src={w.image} alt={w.title} widths={w.widths}

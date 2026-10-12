@@ -28,7 +28,7 @@ const email = CONTACTS.find((c) => c.copy)!;
     </div>
 
     <!-- 가운데: 대표 이미지 -->
-    <figure class="frame" data-frame data-cursor data-cursor-label="Say hi">
+    <figure class="frame" data-frame>
       <div class="art" data-art>
         <Image src={me} alt="프로도 자화상 — 곱슬머리에 흰 티셔츠, 펜을 든 그림" widths={[480, 720, 1000, 1400]}
                sizes="(max-width: 760px) 80vw, 30vw" loading="eager" fetchpriority="high" />
@@ -49,7 +49,7 @@ const email = CONTACTS.find((c) => c.copy)!;
         {CONTACTS.map((c) => (
           <li>
             {c.copy ? (
-              <button class="row sketch-b" type="button" data-copy={c.value} data-cursor-label="Copy">
+              <button class="row sketch-b" type="button" data-copy={c.value}>
                 <span class="t-label">{c.label}</span>
                 <span class="row-val">{c.value}</span>
                 <span class="row-end t-label" data-copy-state>Copy</span>
@@ -64,7 +64,7 @@ const email = CONTACTS.find((c) => c.copy)!;
           </li>
         ))}
       </ul>
-      <a class="cta sketch-fill" href={email.href} data-cta data-dark data-cursor-label="Mail">
+      <a class="cta sketch-fill" href={email.href} data-cta data-dark>
         <span class="t-label">Let's connect</span>
         <span class="cta-arrow" aria-hidden="true">→</span>
       </a>

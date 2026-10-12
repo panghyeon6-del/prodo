@@ -9,7 +9,7 @@ const { current } = Astro.props;
 ---
 
 <header class="nav sketch-b" style="--sk: var(--line)" transition:persist="nav" transition:name="nav" transition:animate="none">
-  <a class="home" href={url('/')} aria-label="홈으로" data-route="home" data-cursor="home"
+  <a class="home" href={url('/')} aria-label="홈으로" data-route="home"
      aria-current={current === 'home' ? 'page' : undefined}>
     <span class="home-square" aria-hidden="true"></span>
   </a>
