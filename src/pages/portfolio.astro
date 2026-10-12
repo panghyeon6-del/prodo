@@ -28,7 +28,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
       </h1>
       <div class="filters" role="group" aria-label="종류별 보기">
         {types.map((t, i) => (
-          <button class="chip t-label" data-filter={t.key} aria-pressed={i === 0 ? 'true' : 'false'}>
+          <button class="chip sketch sketch-pill t-label" data-filter={t.key} aria-pressed={i === 0 ? 'true' : 'false'}>
             {t.label}<span class="chip-n">{count(t.key)}</span>
           </button>
         ))}
@@ -60,10 +60,10 @@ const pad = (n: number) => String(n).padStart(2, '0');
         ))}
       </ol>
 
-      <button class="arrow prev" data-prev aria-label="이전 작품" data-dark>
+      <button class="arrow prev sketch-fill" style="--fill: var(--ink)" data-prev aria-label="이전 작품" data-dark>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" /></svg>
       </button>
-      <button class="arrow next" data-next aria-label="다음 작품" data-dark>
+      <button class="arrow next sketch-fill" style="--fill: var(--ink)" data-next aria-label="다음 작품" data-dark>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>
       </button>
 
@@ -279,12 +279,21 @@ const pad = (n: number) => String(n).padStart(2, '0');
     gap: 0.6em;
     min-height: 2.75rem;
     padding: 0 1.1rem;
-    border: 1px solid var(--ink);
     border-radius: 999px;
+    isolation: isolate;
     transition: background-color var(--dur-fast), color var(--dur-fast), rotate var(--dur) var(--ease-spring);
   }
   .chip-n { opacity: 0.55; }
-  .chip[aria-pressed='true'] { background: var(--ink); color: var(--white); }
+  .chip[aria-pressed='true'] { color: var(--white); }
+  .chip[aria-pressed='true']::after {
+    content: '';
+    position: absolute;
+    inset: 3px 2px;
+    z-index: -1;
+    background: var(--ink);
+    -webkit-mask: url('../assets/sketch/pill-fill.svg') 0 0 / 100% 100% no-repeat;
+    mask: url('../assets/sketch/pill-fill.svg') 0 0 / 100% 100% no-repeat;
+  }
   @media (hover: hover) { .chip:hover { rotate: -3deg; } }
 
   /* ── 캐러셀 ─────────────────────────────── */
@@ -384,7 +393,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
     gap: 1.25rem;
     margin-top: clamp(2rem, 5svh, 3.5rem);
   }
-  .progress { flex: 1; max-width: 16rem; height: 1px; background: var(--line); position: relative; }
+  .progress { flex: 1; max-width: 16rem; height: 1.5px; background: var(--line); position: relative; filter: url(#boil-thin); }
   .progress span {
     position: absolute;
     inset: -1px 0;

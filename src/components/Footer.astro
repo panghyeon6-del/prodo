@@ -4,9 +4,9 @@ import Stripe from './Stripe.astro';
 ---
 
 <footer class="foot-wrap">
-  <div class="foot wrap">
+  <div class="foot wrap sketch-t" style="--sk: var(--line)">
     <span class="t-label"><span class="dash">{SITE.name}</span> {SITE.year}</span>
-    <span class="t-label t-muted keys">Keys <kbd>0</kbd><kbd>1</kbd><kbd>2</kbd></span>
+    <span class="t-label t-muted keys">Keys <kbd class="sketch">0</kbd><kbd class="sketch">1</kbd><kbd class="sketch">2</kbd></span>
   </div>
   <Stripe />
 </footer>
@@ -20,7 +20,6 @@ import Stripe from './Stripe.astro';
     align-items: center;
     padding-block: 2rem;
     margin-top: var(--space-y);
-    border-top: 1px solid var(--line);
   }
   kbd {
     display: inline-grid;
@@ -28,7 +27,6 @@ import Stripe from './Stripe.astro';
     min-width: 1.6em;
     margin-left: 0.4em;
     padding: 0.1em 0.3em;
-    border: 1px solid currentColor;
     font: inherit;
     letter-spacing: 0;
   }

@@ -70,7 +70,7 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
         ))}
       </ol>
 
-      <div class="track">
+      <div class="track sketch-t sketch-b">
         <div class="fill" data-fill></div>
         {phases.map((p) => <span class="tick" style={`--l:${p.left}%`}></span>)}
         <div class="now" data-now>
@@ -93,7 +93,7 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
     <!-- 단계별 할 일 -->
     <section class="detail">
       {phases.map((p) => (
-        <article class="card" data-card data-phase-start={t(p.start)} data-phase-end={t(p.end) + 864e5} data-reveal>
+        <article class="card sketch" data-card data-phase-start={t(p.start)} data-phase-end={t(p.end) + 864e5} data-reveal>
           <header class="card-head">
             <span class="t-label">{p.no}</span>
             <span class="t-label state" data-state>Next</span>
@@ -103,7 +103,7 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
           <ul class="tasks">
             {p.tasks.map((x) => (
               <li class:list={['task', { 'is-done': x.done }]}>
-                <span class="box" aria-hidden="true"></span>
+                <span class="box sketch" aria-hidden="true"></span>
                 <span>{x.text}</span>
                 <span class="sr-only">{x.done ? '완료' : '미완료'}</span>
               </li>
@@ -233,12 +233,14 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
   .track {
     position: relative;
     height: 1.25rem;
-    border: 1px solid var(--ink);
+    border-inline: 1.5px solid var(--ink);
     background: repeating-linear-gradient(-45deg, transparent 0 6px, color-mix(in oklab, var(--ink) 14%, transparent) 6px 7px);
   }
   .fill {
     position: absolute;
     inset: 0;
+  -webkit-mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
+  mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
     width: var(--now);
     background: var(--red);
   }
@@ -303,20 +305,27 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
   .detail {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-top: 1px solid var(--line);
-    border-left: 1px solid var(--line);
+    gap: 0.75rem;
   }
   .card {
     display: grid;
     align-content: start;
     gap: 0.75rem;
     padding: clamp(1.25rem, 2.2vw, 2rem);
-    border-right: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
     min-height: 16rem;
   }
   .card-head { display: flex; justify-content: space-between; }
-  .card[data-status='now'] { background: var(--ink); color: var(--white); }
+  .card { isolation: isolate; --sk: var(--line); }
+  .card[data-status='now'] { color: var(--white); --sk: var(--ink); }
+  .card[data-status='now']::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    background: var(--ink);
+  -webkit-mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
+  mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
+  }
   .card[data-status='now'] .state { color: var(--red); }
   .card[data-status='now'] .t-muted { color: color-mix(in oklab, var(--white) 60%, transparent); }
   .card[data-status='done'] { color: var(--ink-soft); }
@@ -324,12 +333,19 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
   .tasks { list-style: none; display: grid; gap: 0.5rem; margin-top: 0.5rem; }
   .task { display: grid; grid-template-columns: 1rem 1fr; gap: 0.6rem; align-items: start; }
   .box {
+    --sk: currentColor;
     width: 0.9rem;
     height: 0.9rem;
     margin-top: 0.25em;
-    border: 1.5px solid currentColor;
   }
-  .task.is-done .box { background: currentColor; }
+  .task.is-done .box::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: currentColor;
+  -webkit-mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
+  mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
+  }
   .task.is-done span:nth-child(2) { text-decoration: line-through; text-decoration-thickness: 1px; opacity: 0.65; }
 
   /* ── 태블릿 ─────────────────────────────── */

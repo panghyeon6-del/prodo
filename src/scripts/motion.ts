@@ -132,6 +132,15 @@ function onKey(e: KeyboardEvent) {
 document.addEventListener('keydown', onKey);
 initCursor();
 
+// 동작 줄이기: 손그림 선은 남기되 떨림(seed 애니메이션)은 멈춘다
+const pauseBoil = () => {
+  const fx = document.getElementById('fx') as unknown as SVGSVGElement | null;
+  if (!fx) return;
+  if (mqReduce.matches) fx.pauseAnimations(); else fx.unpauseAnimations();
+};
+document.addEventListener('astro:page-load', pauseBoil);
+mqReduce.addEventListener('change', pauseBoil);
+
 document.addEventListener('astro:page-load', () => {
   // 페이지 이동 시 html 클래스가 교체되므로 커서 표시 상태를 복구
   if (mqFine.matches && cursor.tx > 0) document.documentElement.classList.add('has-cursor');

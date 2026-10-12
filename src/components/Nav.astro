@@ -8,7 +8,7 @@ interface Props { current: Route['key'] }
 const { current } = Astro.props;
 ---
 
-<header class="nav" transition:persist="nav" transition:name="nav" transition:animate="none">
+<header class="nav sketch-b" style="--sk: var(--line)" transition:persist="nav" transition:name="nav" transition:animate="none">
   <a class="home" href={url('/')} aria-label="홈으로" data-route="home" data-cursor="home"
      aria-current={current === 'home' ? 'page' : undefined}>
     <span class="home-square" aria-hidden="true"></span>
@@ -54,7 +54,6 @@ const { current } = Astro.props;
     height: var(--h);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
-    border-bottom: 1px solid var(--line);
     background: var(--paper);
   }
 
@@ -70,6 +69,8 @@ const { current } = Astro.props;
     width: 1.125rem;
     aspect-ratio: 1;
     background: var(--red);
+    -webkit-mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
+  mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
     transition: transform var(--dur) var(--ease-spring), border-radius var(--dur) var(--ease-out);
   }
   @media (hover: hover) {
@@ -101,9 +102,11 @@ const { current } = Astro.props;
   .tile::before {
     content: '';
     position: absolute;
-    inset: 0;
+    inset: 3px 0;
     z-index: -1;
     background: var(--ink);
+    -webkit-mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat;
+  mask: url('../assets/sketch/fill.svg') 0 0 / 100% 100% no-repeat; /* 손으로 칠한 면 */
     transform: scaleY(0);
     transform-origin: bottom;
     transition: transform var(--dur) var(--ease-out);
