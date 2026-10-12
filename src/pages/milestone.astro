@@ -1,41 +1,350 @@
 ---
+// 마일스톤 — 한 가지 일: 지금 어디쯤인지 본다.
+// 시작→끝을 가로 한 줄 계획표로 펼치고, 오늘 위치에 NOW 표시.
+// 빌드 시점 값으로 먼저 그리고, 브라우저에서 오늘 날짜로 다시 계산한다(정적 사이트라 빌드가 오래돼도 정확).
 import Base from '../layouts/Base.astro';
-import PageHead from '../components/PageHead.astro';
-import Placeholder from '../components/Placeholder.astro';
-import { ROUTES } from '../lib/site';
+import Doodle from '../components/Doodle.astro';
+import { getRoute } from '../lib/site';
+import { MILESTONE as M } from '../data/milestone';
 
-const route = ROUTES.find((r) => r.key === 'milestone')!;
-const items = [
-  { year: '2024', title: 'Milestone A' },
-  { year: '2025', title: 'Milestone B' },
-  { year: '2026', title: 'Milestone C' },
-];
+const route = getRoute('milestone');
+const t = (d: string) => new Date(`${d}T00:00:00+09:00`).getTime();
+const T0 = t(M.start);
+const T1 = t(M.end) + 864e5; // 끝 날 포함
+const pos = (d: string) => ((t(d) - T0) / (T1 - T0)) * 100;
+const progress = Math.min(100, Math.max(0, ((Date.now() - T0) / (T1 - T0)) * 100));
+
+const phases = M.phases.map((p, i) => ({
+  ...p,
+  no: String(i + 1).padStart(2, '0'),
+  left: pos(p.start),
+  width: pos(p.end) + (100 / ((T1 - T0) / 864e5)) - pos(p.start),
+  done: p.tasks.filter((x) => x.done).length,
+}));
+
+// 월 눈금
+const months: { label: string; left: number }[] = [];
+{
+  const d = new Date(T0);
+  d.setDate(1);
+  while (d.getTime() < T1) {
+    const left = ((d.getTime() - T0) / (T1 - T0)) * 100;
+    if (left >= 0) months.push({ label: d.toLocaleString('en', { month: 'short', timeZone: 'Asia/Seoul' }), left });
+    d.setMonth(d.getMonth() + 1);
+  }
+}
+const fmt = (d: string) => d.slice(5).replace('-', '.');
+const totalDone = M.phases.flatMap((p) => p.tasks).filter((x) => x.done).length;
+const totalTasks = M.phases.flatMap((p) => p.tasks).length;
 ---
 
 <Base route="milestone" title="Milestone">
-  <PageHead route={route} />
-  <ol class="timeline">
-    {items.map((m) => (
-      <li class="item" data-reveal>
-        <span class="t-label year">// {m.year}</span>
-        <h2 class="t-title">{m.title}</h2>
-        <Placeholder ratio="21/9" label={m.title} />
-      </li>
-    ))}
-  </ol>
+  <div class="page wrap" data-page="milestone" data-start={T0} data-end={T1}>
+    <header class="head">
+      <p class="t-label"><span class="dash">{route.no}</span> Current milestone — 현재 마일스톤</p>
+      <div class="head-row">
+        <h1 class="t-display title">{M.title}</h1>
+        <p class="pct" aria-label="진행률">
+          <span data-pct>{Math.round(progress)}</span><span class="pct-unit">%</span>
+        </p>
+      </div>
+      <div class="head-row sub">
+        <p class="summary">{M.summary}</p>
+        <dl class="facts t-label">
+          <dt>Period</dt><dd>{M.start.replaceAll('-', '.')} — {M.end.replaceAll('-', '.')}</dd>
+          <dt>Tasks</dt><dd>{totalDone} / {totalTasks} done</dd>
+          <dt>Today</dt><dd data-today>—</dd>
+        </dl>
+      </div>
+    </header>
+
+    <!-- 가로 계획표 -->
+    <section class="plan" aria-label="일정 계획표" style={`--now:${progress}%`} data-plan>
+      <ol class="phases">
+        {phases.map((p) => (
+          <li class="phase" style={`--l:${p.left}%; --w:${p.width}%`} data-phase-start={t(p.start)} data-phase-end={t(p.end) + 864e5}>
+            <span class="t-label phase-no">{p.no}</span>
+            <span class="phase-name">{p.name}</span>
+            <span class="t-label t-muted phase-date">{fmt(p.start)}–{fmt(p.end)}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div class="track">
+        <div class="fill" data-fill></div>
+        {phases.map((p) => <span class="tick" style={`--l:${p.left}%`}></span>)}
+        <div class="now" data-now>
+          <span class="now-line"></span>
+          <span class="now-flag t-label">Now</span>
+          <Doodle shape="circle" class="now-ring" draw />
+        </div>
+      </div>
+
+      <ol class="months t-label" aria-hidden="true">
+        {months.map((m) => <li style={`--l:${m.left}%`}>{m.label}</li>)}
+      </ol>
+
+      <p class="here" data-here aria-hidden="true">
+        <Doodle shape="arrow" class="here-arrow" draw />
+        <span class="t-label">You are here</span>
+      </p>
+    </section>
+
+    <!-- 단계별 할 일 -->
+    <section class="detail">
+      {phases.map((p) => (
+        <article class="card" data-card data-phase-start={t(p.start)} data-phase-end={t(p.end) + 864e5} data-reveal>
+          <header class="card-head">
+            <span class="t-label">{p.no}</span>
+            <span class="t-label state" data-state>Next</span>
+          </header>
+          <h2 class="t-title">{p.name}</h2>
+          <p class="t-label t-muted">{fmt(p.start)} — {fmt(p.end)} · {p.done}/{p.tasks.length}</p>
+          <ul class="tasks">
+            {p.tasks.map((x) => (
+              <li class:list={['task', { 'is-done': x.done }]}>
+                <span class="box" aria-hidden="true"></span>
+                <span>{x.text}</span>
+                <span class="sr-only">{x.done ? '완료' : '미완료'}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </section>
+  </div>
 </Base>
 
+<script>
+  import type { MotionEvent } from '../scripts/motion';
+
+  document.addEventListener('motion:ready', (e) => {
+    const root = document.querySelector<HTMLElement>('[data-page="milestone"]');
+    if (!root) return;
+    const { gsap, reduced } = (e as MotionEvent).detail;
+
+    // 오늘 날짜로 다시 계산
+    const T0 = Number(root.dataset.start);
+    const T1 = Number(root.dataset.end);
+    const now = Date.now();
+    const pct = Math.min(100, Math.max(0, ((now - T0) / (T1 - T0)) * 100));
+    const plan = root.querySelector<HTMLElement>('[data-plan]')!;
+    plan.style.setProperty('--now', `${pct}%`);
+    root.querySelector('[data-here]')!.classList.toggle('is-flip', pct > 65);
+    root.querySelector('[data-today]')!.textContent = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(now).replaceAll('-', '.');
+
+    // 단계 상태: Done / Now / Next
+    const mark = (el: HTMLElement) => {
+      const s = Number(el.dataset.phaseStart), en = Number(el.dataset.phaseEnd);
+      const state = now >= en ? 'done' : now >= s ? 'now' : 'next';
+      el.dataset.status = state;
+      return state;
+    };
+    root.querySelectorAll<HTMLElement>('.phase').forEach(mark);
+    root.querySelectorAll<HTMLElement>('[data-card]').forEach((c) => {
+      const st = mark(c);
+      c.querySelector('[data-state]')!.textContent = st === 'now' ? 'In progress' : st === 'done' ? 'Done' : 'Next';
+      if (st === 'now') c.setAttribute('data-dark', '');
+    });
+
+    const pctEl = root.querySelector<HTMLElement>('[data-pct]')!;
+    if (reduced) { pctEl.textContent = String(Math.round(pct)); return; }
+
+    // 채움이 오늘까지 차오르고, 숫자가 따라 올라감
+    const counter = { v: 0 };
+    gsap.timeline({ defaults: { ease: 'expo.out' }, delay: 0.2 })
+      .from('.title', { yPercent: 50, autoAlpha: 0, duration: 1 })
+      .from('[data-fill]', { scaleX: 0, transformOrigin: 'left', duration: 1.6, ease: 'power3.inOut' }, 0.2)
+      .to(counter, { v: pct, duration: 1.6, ease: 'power3.inOut', onUpdate: () => (pctEl.textContent = String(Math.round(counter.v))) }, 0.2)
+      .from('.phase', { y: 16, autoAlpha: 0, stagger: 0.08, duration: 0.8 }, 0.3)
+      .from('[data-now]', { y: -40, autoAlpha: 0, duration: 0.8, ease: 'bounce.out' }, 1.5)
+      .from('[data-here]', { autoAlpha: 0, duration: 0.4 }, 1.9);
+  });
+</script>
+
 <style>
-  .timeline { list-style: none; padding: 0 var(--gutter) clamp(2rem, 6vw, 5rem); }
-  .item {
-    display: grid;
-    grid-template-columns: 8rem minmax(0, 1fr) minmax(0, 1.4fr);
-    gap: 2rem;
-    align-items: start;
-    padding-block: 2.5rem;
-    border-bottom: 1px solid var(--line);
+  .page { padding-block: clamp(2rem, 6vw, 5rem) clamp(3rem, 8vw, 6rem); }
+
+  /* ── 머리 ───────────────────────────────── */
+  .head { display: grid; gap: clamp(1rem, 2.5vw, 2rem); }
+  .head-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem 3rem;
   }
-  @media (max-width: 760px) {
-    .item { grid-template-columns: 1fr; gap: 1rem; }
+  .title { font-size: min(var(--fs-display), 14vw); max-width: 9em; }
+  .pct {
+    font-size: clamp(3.5rem, 10vw, 9rem);
+    font-weight: var(--w-text);
+    letter-spacing: -0.05em;
+    line-height: 0.8;
+    color: var(--red);
+    font-variant-numeric: tabular-nums;
+  }
+  .pct-unit { font-size: 0.4em; vertical-align: top; margin-left: 0.05em; }
+  .sub { align-items: flex-start; }
+  .summary { font-size: var(--fs-lead); max-width: 28em; line-height: 1.4; }
+  .facts {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.4rem 1.5rem;
+  }
+  .facts dt { color: var(--ink-soft); }
+
+  /* ── 계획표 ─────────────────────────────── */
+  .plan {
+    position: relative;
+    margin-top: clamp(3rem, 8vw, 6rem);
+    padding-bottom: 4.5rem;
+  }
+  .phases {
+    list-style: none;
+    position: relative;
+    height: 4.5rem;
+  }
+  .phase {
+    position: absolute;
+    left: var(--l);
+    width: var(--w);
+    bottom: 0.9rem;
+    display: grid;
+    gap: 0.15rem;
+    padding-left: 0.6rem;
+    padding-right: 0.5rem;
+    border-left: 1px solid var(--ink);
+    overflow: hidden;
+  }
+  .phase-name {
+    font-weight: var(--w-title);
+    font-size: clamp(0.9rem, 1.6vw, 1.333rem);
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .phase-date { white-space: nowrap; }
+  .phase[data-status='now'] .phase-name { color: var(--red); }
+
+  .track {
+    position: relative;
+    height: 1.25rem;
+    border: 1px solid var(--ink);
+    background: repeating-linear-gradient(-45deg, transparent 0 6px, color-mix(in oklab, var(--ink) 14%, transparent) 6px 7px);
+  }
+  .fill {
+    position: absolute;
+    inset: 0;
+    width: var(--now);
+    background: var(--red);
+  }
+  .tick {
+    position: absolute;
+    left: var(--l);
+    top: -0.9rem;
+    bottom: -0.4rem;
+    width: 1px;
+    background: var(--ink);
+  }
+  .now {
+    position: absolute;
+    left: var(--now);
+    top: -2.6rem;
+    bottom: -2.6rem;
+    width: 0;
+  }
+  .now-line {
+    position: absolute;
+    inset: 0 auto 0 -1px;
+    width: 2px;
+    background: var(--ink);
+  }
+  .now-flag {
+    position: absolute;
+    bottom: 100%;
+    left: -1px;
+    padding: 0.2rem 0.5rem;
+    background: var(--ink);
+    color: var(--white);
+    white-space: nowrap;
+  }
+  .now :global(.now-ring) {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 4.5rem;
+    translate: -50% -50%;
+    color: var(--ink);
+  }
+
+  .months { list-style: none; position: relative; height: 1.5rem; margin-top: 0.6rem; }
+  .months li { position: absolute; left: var(--l); padding-left: 0.3rem; color: var(--ink-soft); }
+
+  .here {
+    position: absolute;
+    left: var(--now);
+    bottom: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+    translate: 0.6rem 0;
+    white-space: nowrap;
+  }
+  .here :global(.here-arrow) { width: 3.5rem; transform: scaleX(-1) rotate(-25deg); }
+  /* 오른쪽 끝 가까이면 왼쪽으로 뒤집음 */
+  .here:global(.is-flip) { translate: calc(-100% - 0.6rem) 0; flex-direction: row-reverse; }
+  .here:global(.is-flip) :global(.here-arrow) { transform: rotate(25deg); }
+
+  /* ── 단계별 카드 ────────────────────────── */
+  .detail {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+  .card {
+    display: grid;
+    align-content: start;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    min-height: 16rem;
+  }
+  .card-head { display: flex; justify-content: space-between; }
+  .card[data-status='now'] { background: var(--ink); color: var(--white); }
+  .card[data-status='now'] .state { color: var(--red); }
+  .card[data-status='now'] .t-muted { color: color-mix(in oklab, var(--white) 60%, transparent); }
+  .card[data-status='done'] { color: var(--ink-soft); }
+
+  .tasks { list-style: none; display: grid; gap: 0.5rem; margin-top: 0.5rem; }
+  .task { display: grid; grid-template-columns: 1rem 1fr; gap: 0.6rem; align-items: start; }
+  .box {
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-top: 0.25em;
+    border: 1.5px solid currentColor;
+  }
+  .task.is-done .box { background: currentColor; }
+  .task.is-done span:nth-child(2) { text-decoration: line-through; text-decoration-thickness: 1px; opacity: 0.65; }
+
+  /* ── 태블릿 ─────────────────────────────── */
+  @media (max-width: 1000px) {
+    .detail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  /* ── 폰: 가로줄은 유지, 단계 이름은 번호만 ─ */
+  @media (max-width: 640px) {
+    .phases { height: 3rem; }
+    .phase-name, .phase-date { display: none; }
+    .phase { padding-left: 0.4rem; }
+    .phase-no { font-weight: var(--w-title); }
+    .phase[data-status='now'] .phase-no { color: var(--red); }
+    .now :global(.now-ring) { width: 3.25rem; }
+    .detail { grid-template-columns: 1fr; }
+    .card { min-height: 0; }
+    .facts { width: 100%; }
   }
 </style>

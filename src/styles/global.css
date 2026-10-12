@@ -13,6 +13,7 @@ html {
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  scroll-padding-top: var(--nav-h);
 }
 
 /* Lenis 권장 설정 */
@@ -23,7 +24,9 @@ html.lenis body { height: auto; }
 
 body {
   min-height: 100svh;
-  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  background: var(--key);
   color: var(--ink);
   font-family: var(--font);
   font-weight: var(--w-text);
@@ -31,7 +34,22 @@ body {
   line-height: var(--lh-body);
   word-break: keep-all;
   overflow-wrap: break-word;
+  overflow-x: clip;
   font-feature-settings: 'tnum' 1;
+  transition: background-color var(--dur-slow) linear;
+}
+main { flex: 1; display: flex; flex-direction: column; }
+
+/* 종이 그레인 — 인쇄물 질감. 고정 레이어 하나라 스크롤 비용 없음 */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.09;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 a { color: inherit; text-decoration: none; }
@@ -42,6 +60,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   outline: 2px solid var(--red);
   outline-offset: 2px;
 }
+
+::selection { background: var(--red); color: var(--white); }
 
 /* ── 타이포 유틸 ─────────────────────────────── */
 .t-display {
@@ -69,6 +89,12 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   text-transform: uppercase;
 }
 
+.t-lead {
+  font-size: var(--fs-lead);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
 .t-muted { color: var(--ink-soft); }
 
 .sr-only {
@@ -87,10 +113,72 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   background: currentColor;
 }
 
+/* 하위 페이지 공통 여백 */
+.wrap { padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right)); }
+
+/* ── 두들(손그림) ─────────────────────────────── */
+.doodle {
+  max-width: none;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: url(#boil);
+  pointer-events: none;
+}
+.doodle path { vector-effect: non-scaling-stroke; }
+
+/* ── 커스텀 커서 (마우스 기기 + JS 활성 시) ─── */
+.cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 200;
+  pointer-events: none;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity var(--dur-fast), color var(--dur-fast);
+}
+.has-cursor .cursor { opacity: 1; }
+.cursor-cross {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  translate: -50% -50%;
+  transition: scale var(--dur) var(--ease-spring), rotate var(--dur) var(--ease-spring);
+}
+.cursor-cross::before,
+.cursor-cross::after {
+  content: '';
+  position: absolute;
+  background: currentColor;
+}
+.cursor-cross::before { left: 50%; top: 0; bottom: 0; width: 1.5px; translate: -50% 0; }
+.cursor-cross::after { top: 50%; left: 0; right: 0; height: 1.5px; translate: 0 -50%; }
+.cursor-label {
+  position: absolute;
+  left: 18px;
+  top: 14px;
+  white-space: nowrap;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.cursor.is-link .cursor-cross { scale: 1.6; rotate: 45deg; }
+.cursor.is-down .cursor-cross { scale: 0.7; }
+.cursor.on-dark { color: var(--white); }
+
+@media (hover: hover) and (pointer: fine) {
+  .has-cursor, .has-cursor a, .has-cursor button, .has-cursor [data-cursor] { cursor: none; }
+}
+
 /* ── 모션 접근성 ─────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+  .doodle { filter: none; }
 }

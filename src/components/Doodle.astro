@@ -1,0 +1,60 @@
+---
+// 손그림 두들. 선이 미세하게 떨리는(boil) 필터가 걸려 있고,
+// draw 를 주면 화면에 들어올 때 선이 그려진다(scripts/motion.ts).
+// 위치·크기는 class 로 부모가 정한다.
+const SHAPES = {
+  circle: {
+    vb: '0 0 100 100',
+    d: ['M14 58C8 30 40 8 70 13 95 18 99 60 76 80 54 97 14 90 7 63 3 44 22 25 48 21'],
+  },
+  underline: {
+    vb: '0 0 100 14',
+    d: ['M2 9C20 4 38 12 58 7 74 3 88 6 98 8'],
+  },
+  arrow: {
+    vb: '0 0 100 80',
+    d: ['M8 72C14 40 48 16 86 28', 'M68 16 87 28 70 42'],
+  },
+  star: {
+    vb: '0 0 100 100',
+    d: ['M50 6C53 36 64 47 94 50 64 53 53 64 50 94 47 64 36 53 6 50 36 47 47 36 50 6Z'],
+  },
+  squiggle: {
+    vb: '0 0 104 30',
+    d: ['M2 16Q12 1 22 16T42 16 62 16 82 16 102 16'],
+  },
+  cross: {
+    vb: '0 0 100 100',
+    d: ['M48 6 52 94', 'M6 50 94 46'],
+  },
+  burst: {
+    vb: '0 0 100 100',
+    d: ['M50 4V22M50 78V96M4 50H22M78 50H96M18 18 30 30M70 70 82 82M82 18 70 30M30 70 18 82'],
+  },
+  hatch: {
+    vb: '0 0 100 40',
+    d: ['M4 36 20 4M18 36 34 4M32 36 48 4M46 36 62 4M60 36 76 4M74 36 90 4'],
+  },
+} as const;
+
+type Shape = keyof typeof SHAPES;
+
+interface Props {
+  shape: Shape;
+  class?: string;
+  draw?: boolean;
+  stretch?: boolean;   // 감싸는 단어 비율에 맞춰 늘림
+}
+const { shape, class: cls, draw = false, stretch = false } = Astro.props;
+const s = SHAPES[shape];
+---
+
+<svg
+  class:list={['doodle', cls]}
+  viewBox={s.vb}
+  preserveAspectRatio={stretch ? 'none' : 'xMidYMid meet'}
+  aria-hidden="true"
+  data-draw={draw ? '' : undefined}
+>
+  {s.d.map((d) => <path d={d} pathLength="1" />)}
+</svg>

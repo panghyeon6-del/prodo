@@ -1,103 +1,366 @@
 ---
-// 랜딩 — 레이아웃 골격만. 인터랙션은 다음 단계에서 [data-*] 훅에 붙인다.
+// 랜딩 — 한 화면, 한 가지 일: "나"의 비주얼을 보여준다.
+// 빨간 네모(대표 이미지)를 던지고, 글자를 건드리고, 시간이 흐른다.
 import Base from '../layouts/Base.astro';
-import Placeholder from '../components/Placeholder.astro';
-import { ROUTES, url } from '../lib/site';
+import Doodle from '../components/Doodle.astro';
+import { SITE } from '../lib/site';
 
-const sections = ROUTES.filter((r) => r.key !== 'home');
+const lines = [['A', 'BETTER'], ['YOU']];
+const words = ['Track', 'Reflect', 'Build', 'Repeat'];
+const badge = `${SITE.name} • V${SITE.version} • `;
 ---
 
-<Base route="home">
-  <section class="hero">
-    <div class="hero-type">
-      <h1 class="t-display" data-hero-title>A Better<br />You<span class="bar" aria-hidden="true"></span></h1>
-      <p class="t-label hero-sub">
-        <span class="t-muted">Track</span> / Reflect / Build / Repeat
-      </p>
+<Base route="home" footer={false}>
+  <section class="landing" data-page="home">
+    <!-- 상단 메타 -->
+    <p class="t-label meta meta-l">V {SITE.version}<br />For a better<br /><span class="dash">tomorrow</span></p>
+    <p class="t-label meta meta-r">Small steps<br />Real change<br /><span class="dash">Always</span></p>
+
+    <!-- 타이틀 -->
+    <h1 class="title t-display" aria-label="A better you">
+      {lines.map((line, li) => (
+        <span class="line" aria-hidden="true">
+          {line.map((word, wi) => (
+            <>
+              <span class="word">
+                {[...word].map((c) => <span class="ch" data-cursor>{c}</span>)}
+              </span>
+              {wi < line.length - 1 && ' '}
+            </>
+          ))}
+          {li === lines.length - 1 && <span class="bar"></span>}
+        </span>
+      ))}
+      <Doodle shape="star" class="star" />
+    </h1>
+
+    <!-- 대표 이미지: 빨간 네모 -->
+    <div class="stage">
+      <div class="square" data-square data-cursor data-cursor-label="Drag" data-dark role="img" aria-label="대표 이미지">
+        <span class="t-label square-no">/01</span>
+        <svg class="badge" viewBox="0 0 200 200" aria-hidden="true">
+          <defs><path id="badge-path" d="M100 100m-78 0a78 78 0 1 1 156 0a78 78 0 1 1-156 0" /></defs>
+          <circle cx="100" cy="100" r="98" />
+          <text><textPath href="#badge-path" textLength="486" lengthAdjust="spacing">{badge}</textPath></text>
+        </svg>
+      </div>
+      <div class="hint" data-hint aria-hidden="true">
+        <Doodle shape="arrow" class="hint-arrow" draw />
+        <span class="t-label">Throw me</span>
+      </div>
     </div>
 
-    <aside class="hero-side">
-      <dl class="spec t-label">
-        <dt>Side A</dt><dd>A more focused you</dd>
-        <dt>Side B</dt><dd>A brighter tomorrow</dd>
-        <dt>Type</dt><dd>Personal enhancement</dd>
-      </dl>
-      <a class="cta" href={url('/portfolio')} data-cta>
-        <span class="t-label">Play<br />A better you</span>
-        <span class="t-label cta-right">Press for<br />progress <span class="arrow" aria-hidden="true">→</span></span>
-      </a>
-    </aside>
-  </section>
-
-  <section class="cards">
-    {sections.map((r, i) => (
-      <a class:list={['card', { 'card--ink': i === 0 }]} href={url(r.path)} data-card>
-        <span class="t-label">{r.no}</span>
-        <Placeholder ratio="16/9" label={r.ko} tone={i === 0 ? 'ink' : 'paper'} />
-        <span class="t-title">{r.label}</span>
-        <span class="t-label">{r.sub}</span>
-      </a>
-    ))}
+    <!-- 하단 메타 -->
+    <p class="t-label meta meta-bl"><span data-clock>00:00:00</span> KST<br /><span class="t-muted">Progress lives in the details.</span></p>
+    <p class="t-label meta words" aria-label={words.join(' / ')}>
+      {words.map((w, i) => (
+        <>
+          <span class="w" data-word aria-hidden="true">{w}</span>
+          {i < words.length - 1 && <span class="slash" aria-hidden="true">/</span>}
+        </>
+      ))}
+    </p>
+    <p class="t-label meta meta-br coords" aria-hidden="true">X <span data-x>0000</span><br />Y <span data-y>0000</span></p>
   </section>
 </Base>
 
+<script>
+  import { Draggable } from 'gsap/Draggable';
+  import { InertiaPlugin } from 'gsap/InertiaPlugin';
+  import type { MotionEvent } from '../scripts/motion';
+
+  document.addEventListener('motion:ready', (e) => {
+    const root = document.querySelector<HTMLElement>('[data-page="home"]');
+    if (!root) return;
+    const { gsap, reduced, cleanup } = (e as MotionEvent).detail;
+    gsap.registerPlugin(Draggable, InertiaPlugin);
+
+    const chars = gsap.utils.toArray<HTMLElement>('.ch', root);
+    const square = root.querySelector<HTMLElement>('[data-square]')!;
+    const hint = root.querySelector<HTMLElement>('[data-hint]')!;
+    const stage = root.querySelector<HTMLElement>('.stage')!;
+
+    /* 1. 시계 (KST) */
+    const clock = root.querySelector<HTMLElement>('[data-clock]')!;
+    const fmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    });
+    const tickClock = () => (clock.textContent = fmt.format(new Date()));
+    tickClock();
+    const clockId = window.setInterval(tickClock, 1000);
+    cleanup(() => clearInterval(clockId));
+
+    /* 2. Track / Reflect / Build / Repeat 순환 */
+    const words = gsap.utils.toArray<HTMLElement>('[data-word]', root);
+    let wi = 0;
+    const cycle = () => {
+      words.forEach((w, i) => w.classList.toggle('is-on', i === wi));
+      wi = (wi + 1) % words.length;
+    };
+    cycle();
+    const wordId = window.setInterval(cycle, 1400);
+    cleanup(() => clearInterval(wordId));
+
+    if (reduced) return;
+
+    /* 3. 등장: 글자가 아래에서 차례로 솟음 → 네모가 툭 떨어짐 */
+    const intro = gsap.timeline({ defaults: { ease: 'expo.out' } });
+    intro
+      .from(chars, { yPercent: 110, duration: 1.1, stagger: 0.045 })
+      .from('.bar', { scaleX: 0, transformOrigin: 'left', duration: 0.8 }, '-=0.7')
+      .from(square, { y: -window.innerHeight * 0.6, rotate: -25, duration: 1.2, ease: 'bounce.out' }, 0.3)
+      .from('.meta', { autoAlpha: 0, y: 10, duration: 0.8, stagger: 0.06 }, 0.6)
+      .from('.star', { scale: 0, rotate: -90, duration: 0.8, ease: 'back.out(3)' }, 1.0)
+      .from(hint, { autoAlpha: 0, duration: 0.5 }, 1.4);
+
+    /* 4. 글자가 커서를 피해 살짝 들림 (마우스) + 클릭하면 점프 (공통) */
+    const setters = chars.map((c) => ({
+      el: c,
+      y: gsap.quickTo(c, 'y', { duration: 0.5, ease: 'power3.out' }),
+      r: gsap.quickTo(c, 'rotate', { duration: 0.5, ease: 'power3.out' }),
+    }));
+    const xEl = root.querySelector<HTMLElement>('[data-x]')!;
+    const yEl = root.querySelector<HTMLElement>('[data-y]')!;
+    const pad = (n: number) => String(Math.max(0, Math.round(n))).padStart(4, '0');
+
+    const onMove = (ev: PointerEvent) => {
+      xEl.textContent = pad(ev.clientX);
+      yEl.textContent = pad(ev.clientY);
+      if (ev.pointerType !== 'mouse' || intro.isActive()) return;
+      for (const s of setters) {
+        const b = s.el.getBoundingClientRect();
+        const dx = ev.clientX - (b.left + b.width / 2);
+        const dy = ev.clientY - (b.top + b.height / 2);
+        const d = Math.hypot(dx, dy);
+        const f = Math.max(0, 1 - d / 220);
+        s.y(-f * b.height * 0.14);
+        s.r(f * (dx > 0 ? -6 : 6));
+      }
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    cleanup(() => window.removeEventListener('pointermove', onMove));
+
+    chars.forEach((c) =>
+      c.addEventListener('click', () => {
+        gsap.fromTo(c, { y: 0 }, { keyframes: { y: [0, -60, 0, -14, 0], rotate: [0, -12, 4, 0, 0] }, duration: 0.9, ease: 'power1.out', overwrite: true });
+      }),
+    );
+
+    /* 5. 빨간 네모: 잡아서 던지기 (터치 포함) */
+    let hinted = true;
+    const [drag] = Draggable.create(square, {
+      bounds: root,
+      inertia: true,
+      edgeResistance: 0.75,
+      onPress() {
+        gsap.to(square, { scale: 0.92, duration: 0.2 });
+        if (hinted) {
+          hinted = false;
+          gsap.to(hint, { autoAlpha: 0, duration: 0.3 });
+        }
+      },
+      onRelease() {
+        gsap.to(square, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+      },
+      onDrag() {
+        const v = InertiaPlugin.getVelocity(square, 'x') as number;
+        gsap.to(square, { rotate: gsap.utils.clamp(-25, 25, v / 60), duration: 0.3 });
+      },
+      onThrowUpdate() {
+        const v = InertiaPlugin.getVelocity(square, 'x') as number;
+        gsap.set(square, { rotate: gsap.utils.clamp(-25, 25, v / 60) });
+      },
+      onThrowComplete() {
+        gsap.to(square, { rotate: 0, duration: 0.8, ease: 'elastic.out(1, 0.5)' });
+      },
+    });
+    // 더블클릭(더블탭) → 제자리로
+    const reset = () => gsap.to(square, { x: 0, y: 0, rotate: 0, duration: 0.9, ease: 'expo.out', onUpdate: () => drag.update() });
+    square.addEventListener('dblclick', reset);
+    cleanup(() => drag.kill());
+
+    // 창 크기가 바뀌면 네모를 제자리로 (경계 밖으로 나가지 않게)
+    const onResize = () => { gsap.set(square, { x: 0, y: 0 }); drag.update(); };
+    window.addEventListener('resize', onResize);
+    cleanup(() => window.removeEventListener('resize', onResize));
+
+    void stage;
+  });
+</script>
+
 <style>
-  .hero {
+  .landing {
+    position: relative;
+    flex: 1;
     display: grid;
-    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
-    gap: 2rem;
-    padding: clamp(2rem, 6vw, 5rem) var(--gutter);
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: auto 1fr auto;
+    column-gap: 1.5rem;
+    row-gap: clamp(1rem, 3svh, 2.5rem);
+    min-height: calc(100svh - var(--nav-h));
+    padding:
+      clamp(1.25rem, 4svh, 2.5rem)
+      max(var(--gutter), env(safe-area-inset-right))
+      calc(clamp(1.25rem, 4svh, 2.5rem) + env(safe-area-inset-bottom))
+      max(var(--gutter), env(safe-area-inset-left));
+    overflow: clip;
+    user-select: none;
+    -webkit-user-select: none;
   }
-  .hero-type { grid-column: 1 / span 7; display: grid; gap: 2rem; align-content: start; }
+
+  /* ── 메타 라벨 ───────────────────────────── */
+  .meta-l { grid-column: 1 / span 4; grid-row: 1; }
+  .meta-r { grid-column: 9 / -1; grid-row: 1; justify-self: end; }
+  .meta-bl { grid-column: 1 / span 4; grid-row: 3; align-self: end; }
+  .meta-br { grid-column: 10 / -1; grid-row: 3; align-self: end; justify-self: end; text-align: right; }
+  .coords span { display: inline-block; min-width: 4ch; }
+
+  .words {
+    grid-column: 5 / span 5;
+    grid-row: 3;
+    align-self: end;
+    justify-self: center;
+    display: flex;
+    gap: 0.9em;
+    font-size: clamp(0.75rem, 1.1vw, 1rem);
+    letter-spacing: 0.25em;
+  }
+  .w { color: var(--ink-soft); transition: color 0.3s linear; }
+  .w.is-on { color: var(--ink); }
+  .slash { color: var(--ink-soft); }
+
+  /* ── 타이틀 ──────────────────────────────── */
+  .title {
+    position: relative;
+    grid-column: 1 / span 8;
+    grid-row: 2;
+    align-self: center;
+    z-index: 2;
+    width: fit-content;
+    font-size: min(var(--fs-display), 26svh);
+    pointer-events: none;
+  }
+  .line {
+    display: block;
+    /* 글자가 아래에서 솟을 때 잘리도록 */
+    clip-path: inset(-0.4em -0.2em -0.02em -0.2em);
+    white-space: nowrap;
+  }
+  .word { display: inline-block; }
+  .ch {
+    display: inline-block;
+    pointer-events: auto;
+    will-change: transform;
+  }
   .bar {
     display: inline-block;
-    width: 1.1em;
-    height: 0.07em;
-    margin-left: 0.3em;
-    vertical-align: middle;
+    width: 0.95em;
+    height: 0.075em;
+    margin-left: 0.25em;
+    vertical-align: 0.3em;
     background: currentColor;
   }
-  .hero-sub { font-size: var(--fs-lead); letter-spacing: 0.25em; }
-
-  .hero-side { grid-column: 8 / -1; display: grid; align-content: start; border-left: 1px solid var(--line); }
-  .spec {
-    display: grid;
-    grid-template-columns: 6em 1fr;
-    gap: 0.6rem 1rem;
-    padding: 2rem;
+  .title :global(.star) {
+    position: absolute;
+    top: -0.18em;
+    left: calc(100% + 0.04em);
+    width: 0.32em;
+    color: var(--red);
   }
-  .cta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    min-height: 10rem;
-    padding: 2rem;
+
+  /* ── 빨간 네모 ──────────────────────────── */
+  .stage {
+    position: relative;
+    grid-column: 8 / -1;
+    grid-row: 2;
+    display: grid;
+    place-items: center;
+    z-index: 3;
+  }
+  .square {
+    --size: min(30vw, 46svh);
+    position: relative;
+    width: var(--size);
+    aspect-ratio: 1;
     background: var(--red);
     color: var(--white);
+    touch-action: none;
+    cursor: grab;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
   }
-  .arrow { display: inline-block; font-size: 1.5rem; margin-left: 1rem; transition: transform var(--dur) var(--ease-out); }
-  .cta:hover .arrow { transform: translateX(0.5rem); }
+  .square:active { cursor: grabbing; }
+  .square-no {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    font-size: clamp(0.75rem, 1.2vw, 1rem);
+  }
 
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    margin: 0 var(--gutter) clamp(2rem, 6vw, 5rem);
-    border: 1px solid var(--line);
+  /* 회전 스티커 */
+  .badge {
+    position: absolute;
+    right: -14%;
+    top: -14%;
+    width: 38%;
+    animation: spin 14s linear infinite;
   }
-  .card {
-    display: grid;
-    gap: 1.25rem;
-    padding: 1.5rem;
-    border-left: 1px solid var(--line);
+  .badge circle { fill: var(--ink); }
+  .badge text {
+    fill: var(--white);
+    font-size: 15.5px;
+    font-weight: var(--w-text);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
   }
-  .card:first-child { border-left: 0; }
-  .card--ink { background: var(--ink); color: var(--white); }
+  @keyframes spin { to { rotate: 360deg; } }
+  @media (hover: hover) {
+    .square:hover .badge { animation-duration: 3s; }
+  }
 
-  @media (max-width: 900px) {
-    .hero-type, .hero-side { grid-column: 1 / -1; }
-    .hero-side { border-left: 0; border-top: 1px solid var(--line); }
-    .cards { grid-template-columns: 1fr; }
-    .card { border-left: 0; border-top: 1px solid var(--line); }
-    .card:first-child { border-top: 0; }
+  .hint {
+    position: absolute;
+    left: 0;
+    bottom: 4%;
+    display: flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+    pointer-events: none;
+  }
+  .hint :global(.hint-arrow) { width: 4.5rem; transform: rotate(-10deg); }
+  .hint .t-label { translate: 0 0.4rem; }
+
+  /* ── 태블릿 세로 / 폰 ───────────────────── */
+  @media (max-width: 900px) and (orientation: portrait), (max-width: 600px) {
+    .landing { grid-template-rows: auto auto 1fr auto auto; }
+    .meta-l { grid-column: 1 / span 6; }
+    .meta-r { grid-column: 7 / -1; }
+    .title {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      align-self: start;
+      font-size: min(17.5vw, 22svh);
+    }
+    .stage { grid-column: 1 / -1; grid-row: 3; }
+    .square { --size: min(56vw, 34svh); }
+    .hint { left: auto; right: 0; bottom: 0; flex-direction: row-reverse; }
+    .hint :global(.hint-arrow) { transform: scaleX(-1) rotate(-10deg); width: 3.5rem; }
+    .meta-bl { grid-column: 1 / span 8; grid-row: 5; }
+    .meta-br { grid-column: 9 / -1; grid-row: 5; }
+    .words {
+      grid-column: 1 / -1;
+      grid-row: 4;
+      justify-self: start;
+      gap: 0.6em;
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+    }
+  }
+
+  /* ── 가로로 누운 폰 (높이 부족) ─────────── */
+  @media (max-height: 520px) and (orientation: landscape) {
+    .landing { row-gap: 0.5rem; }
+    .title { font-size: min(var(--fs-display), 24svh); }
+    .square { --size: 44svh; }
+    .words, .hint, .meta-bl .t-muted, .meta-bl br { display: none; }
   }
 </style>

@@ -1,42 +1,384 @@
 ---
+// 포트폴리오 — 한 가지 일: 작품을 본다.
+// 지금 보고 있는(가운데에 온 / 마우스를 올린) 작품의 색이 배경 뒤로 번지고,
+// 페이지 키컬러가 그 색으로 살짝 물든다.
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
-import PageHead from '../components/PageHead.astro';
-import Placeholder from '../components/Placeholder.astro';
-import { ROUTES } from '../lib/site';
+import Doodle from '../components/Doodle.astro';
+import { getRoute } from '../lib/site';
+import { TYPES, WORKS } from '../data/portfolio';
 
-const route = ROUTES.find((r) => r.key === 'portfolio')!;
-const works = Array.from({ length: 6 }, (_, i) => ({
-  no: String(i + 1).padStart(2, '0'),
-  title: `Project ${i + 1}`,
-  ratio: i % 3 === 0 ? '16/9' : '4/5',
-}));
+const route = getRoute('portfolio');
+const ratio = (r: string) => { const [a, b] = r.split('/').map(Number); return a / b; };
+const count = (k: string) => (k === 'all' ? WORKS.length : WORKS.filter((w) => w.type === k).length);
 ---
 
 <Base route="portfolio" title="Portfolio">
-  <PageHead route={route} />
-  <section class="works">
-    {works.map((w) => (
-      <article class="work">
-        <Placeholder ratio={w.ratio} label={w.title} />
-        <header class="work-meta">
-          <span class="t-label">{w.no}</span>
-          <h2 class="t-title">{w.title}</h2>
-        </header>
-      </article>
-    ))}
-  </section>
+  <!-- 배경에 번지는 앰비언트 레이어 (두 장을 교차) -->
+  <div class="ambient" aria-hidden="true" data-ambient>
+    <div class="amb" data-amb></div>
+    <div class="amb" data-amb></div>
+  </div>
+
+  <div class="page" data-page="portfolio">
+    <header class="head wrap">
+      <p class="t-label"><span class="dash">{route.no}</span> {route.ko}</p>
+      <h1 class="t-display title">
+        {route.label}<sup class="count" data-count>({WORKS.length})</sup>
+        <Doodle shape="squiggle" class="title-squiggle" draw />
+      </h1>
+
+      <div class="filters" role="group" aria-label="종류별 보기">
+        {TYPES.map((t, i) => (
+          <button class="chip t-label" data-filter={t.key} aria-pressed={i === 0 ? 'true' : 'false'}>
+            {t.label}<span class="chip-n">{count(t.key)}</span>
+          </button>
+        ))}
+      </div>
+    </header>
+
+    <ul class="works wrap" data-works>
+      {WORKS.map((w, i) => (
+        <li class="work" data-type={w.type} data-color={w.color}>
+          <button class="work-btn" data-open={i} data-cursor-label="View"
+                  aria-label={`${w.title} 크게 보기`}>
+            <span class="media" style={`aspect-ratio:${w.ratio}; --c:${w.color}; --r:${ratio(w.ratio).toFixed(4)}`}>
+              {w.image ? (
+                <Image src={w.image} alt="" widths={[480, 800, 1200]}
+                       sizes="(max-width: 560px) 100vw, (max-width: 1000px) 50vw, 33vw" loading="lazy" />
+              ) : (
+                <span class="t-label media-ph">{w.type} — {w.ratio}</span>
+              )}
+            </span>
+          </button>
+          <div class="work-meta">
+            <span class="t-label">{String(i + 1).padStart(2, '0')}</span>
+            <h2 class="work-title">{w.title}</h2>
+            <span class="t-label t-muted">{w.type} / {w.year}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <!-- 크게 보기 -->
+  <dialog class="viewer" data-viewer data-dark aria-label="작품 보기">
+    <div class="viewer-stage" data-viewer-stage></div>
+    <div class="viewer-bar">
+      <p class="t-label" data-viewer-caption></p>
+      <div class="viewer-ctrl">
+        <button class="t-label" data-prev aria-label="이전">← Prev</button>
+        <button class="t-label" data-next aria-label="다음">Next →</button>
+        <button class="t-label viewer-close" data-close aria-label="닫기">Close ✕</button>
+      </div>
+    </div>
+  </dialog>
 </Base>
 
+<script>
+  import type { MotionEvent } from '../scripts/motion';
+
+  /** 이미지 평균색 (8×8 샘플) */
+  function averageColor(img: HTMLImageElement): string | null {
+    try {
+      const c = document.createElement('canvas');
+      c.width = c.height = 8;
+      const g = c.getContext('2d', { willReadFrequently: true })!;
+      g.drawImage(img, 0, 0, 8, 8);
+      const d = g.getImageData(0, 0, 8, 8).data;
+      let r = 0, gg = 0, b = 0;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; }
+      const n = d.length / 4;
+      return `rgb(${Math.round(r / n)} ${Math.round(gg / n)} ${Math.round(b / n)})`;
+    } catch {
+      return null;
+    }
+  }
+
+  document.addEventListener('motion:ready', (e) => {
+    const root = document.querySelector<HTMLElement>('[data-page="portfolio"]');
+    if (!root) return;
+    const { gsap, ScrollTrigger, reduced, cleanup } = (e as MotionEvent).detail;
+
+    const items = gsap.utils.toArray<HTMLElement>('.work', root);
+    const ambs = gsap.utils.toArray<HTMLElement>('[data-amb]');
+    let front = 0;
+    let current: HTMLElement | null = null;
+
+    // 실제 이미지가 있으면 평균색으로 키컬러를 덮어쓴다
+    items.forEach((li) => {
+      const img = li.querySelector('img');
+      if (!img) return;
+      const apply = () => { const c = averageColor(img); if (c) li.dataset.color = c; };
+      if (img.complete) apply(); else img.addEventListener('load', apply, { once: true });
+    });
+
+    /* ── 앰비언트: 활성 작품의 색/이미지가 뒤로 번진다 ── */
+    function setActive(li: HTMLElement | null) {
+      if (li === current) return;
+      current = li;
+      items.forEach((it) => it.classList.toggle('is-active', it === li));
+      const color = li?.dataset.color;
+      document.body.style.setProperty(
+        '--key',
+        color ? `color-mix(in oklab, var(--paper) 84%, ${color})` : 'var(--paper)',
+      );
+      const next = ambs[1 - front];
+      const prev = ambs[front];
+      if (li && color) {
+        const img = li.querySelector('img');
+        next.style.backgroundColor = color;
+        next.style.backgroundImage = img ? `url("${img.currentSrc || img.src}")` : '';
+        next.classList.add('is-on');
+      }
+      prev.classList.remove('is-on');
+      front = li ? 1 - front : front;
+    }
+
+    // 스크롤: 화면 가운데에 걸친 작품이 활성
+    items.forEach((li) => {
+      ScrollTrigger.create({
+        trigger: li,
+        start: 'top 60%',
+        end: 'bottom 40%',
+        onToggle: (self) => { if (self.isActive) setActive(li); },
+      });
+    });
+    // 마우스: 올린 작품이 우선
+    const onEnter = (ev: Event) => setActive(ev.currentTarget as HTMLElement);
+    if (matchMedia('(hover: hover)').matches) {
+      items.forEach((li) => li.addEventListener('pointerenter', onEnter));
+    }
+    cleanup(() => setActive(null));
+
+    /* ── 필터 ── */
+    const chips = gsap.utils.toArray<HTMLButtonElement>('[data-filter]', root);
+    const countEl = root.querySelector<HTMLElement>('[data-count]')!;
+    chips.forEach((chip) =>
+      chip.addEventListener('click', () => {
+        const key = chip.dataset.filter!;
+        chips.forEach((c) => c.setAttribute('aria-pressed', String(c === chip)));
+        const shown = items.filter((li) => {
+          const on = key === 'all' || li.dataset.type === key;
+          li.hidden = !on;
+          return on;
+        });
+        countEl.textContent = `(${shown.length})`;
+        if (!reduced) gsap.fromTo(shown, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.05, ease: 'expo.out' });
+        ScrollTrigger.refresh();
+      }),
+    );
+
+    /* ── 등장 ── */
+    if (!reduced) {
+      gsap.from('.title', { yPercent: 40, autoAlpha: 0, duration: 1, ease: 'expo.out' });
+      items.forEach((li) =>
+        gsap.from(li, {
+          y: 60, autoAlpha: 0, duration: 1, ease: 'expo.out',
+          scrollTrigger: { trigger: li, start: 'top 95%', once: true },
+        }),
+      );
+    }
+
+    /* ── 크게 보기 ── */
+    const dialog = document.querySelector<HTMLDialogElement>('[data-viewer]')!;
+    const stage = dialog.querySelector<HTMLElement>('[data-viewer-stage]')!;
+    const caption = dialog.querySelector<HTMLElement>('[data-viewer-caption]')!;
+    let idx = 0;
+
+    const visible = () => items.filter((li) => !li.hidden);
+    function show(i: number) {
+      const list = visible();
+      idx = (i + list.length) % list.length;
+      const li = list[idx];
+      const media = li.querySelector('.media')!.cloneNode(true) as HTMLElement;
+      const img = media.querySelector('img');
+      if (img) { img.loading = 'eager'; img.sizes = '100vw'; }
+      stage.replaceChildren(media);
+      const title = li.querySelector('.work-title')!.textContent;
+      const meta = li.querySelector('.work-meta .t-muted')!.textContent;
+      caption.textContent = `${String(idx + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')} — ${title} — ${meta}`;
+      setActive(li);
+      if (!reduced) gsap.fromTo(media, { autoAlpha: 0, scale: 0.97 }, { autoAlpha: 1, scale: 1, duration: 0.5, ease: 'expo.out' });
+    }
+    root.querySelectorAll<HTMLButtonElement>('[data-open]').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        const li = btn.closest<HTMLElement>('.work')!;
+        show(visible().indexOf(li));
+        dialog.showModal();
+      }),
+    );
+    dialog.querySelector('[data-prev]')!.addEventListener('click', () => show(idx - 1));
+    dialog.querySelector('[data-next]')!.addEventListener('click', () => show(idx + 1));
+    dialog.querySelector('[data-close]')!.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', (ev) => { if (ev.target === dialog || ev.target === stage) dialog.close(); });
+    const onKey = (ev: KeyboardEvent) => {
+      if (!dialog.open) return;
+      if (ev.key === 'ArrowLeft') show(idx - 1);
+      if (ev.key === 'ArrowRight') show(idx + 1);
+    };
+    document.addEventListener('keydown', onKey);
+    // 스와이프
+    let sx = 0;
+    stage.addEventListener('touchstart', (ev) => { sx = ev.touches[0].clientX; }, { passive: true });
+    stage.addEventListener('touchend', (ev) => {
+      const dx = ev.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1));
+    });
+    cleanup(() => { document.removeEventListener('keydown', onKey); if (dialog.open) dialog.close(); });
+  });
+</script>
+
 <style>
-  .works {
+  /* ── 앰비언트 ───────────────────────────── */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .amb {
+    position: absolute;
+    inset: -15%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(90px) saturate(1.25);
+    opacity: 0;
+    transform: scale(1.05);
+    transition: opacity 1.2s linear, transform 2.4s var(--ease-out);
+    /* 색 박스일 때: 가운데가 진하고 바깥으로 빠지는 덩어리 */
+    mask-image: radial-gradient(closest-side, #000 30%, transparent);
+  }
+  .amb:global(.is-on) { opacity: 0.38; transform: scale(1); }
+
+  .page { position: relative; z-index: 1; }
+
+  /* ── 머리 ───────────────────────────────── */
+  .head {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(2rem, 4vw, 4rem) 2rem;
-    padding: clamp(2rem, 6vw, 5rem) var(--gutter);
+    gap: 1.25rem;
+    padding-block: clamp(2rem, 6vw, 5rem) clamp(1.5rem, 3vw, 2.5rem);
   }
-  .work { display: grid; gap: 1rem; align-content: start; }
-  .work-meta { display: flex; gap: 1rem; align-items: baseline; }
-  @media (max-width: 760px) {
-    .works { grid-template-columns: 1fr; }
+  .title { position: relative; width: fit-content; font-size: min(var(--fs-display), 15vw); }
+  .count {
+    font-size: 0.22em;
+    font-weight: var(--w-text);
+    letter-spacing: 0;
+    vertical-align: top;
+    margin-left: 0.2em;
   }
+  .head :global(.title-squiggle) {
+    position: absolute;
+    left: 0;
+    bottom: -0.25em;
+    width: 0.9em;
+    color: var(--red);
+  }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    min-height: 2.75rem;
+    padding: 0 1.1rem;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    transition: background-color var(--dur-fast), color var(--dur-fast), rotate var(--dur) var(--ease-spring);
+  }
+  .chip-n { opacity: 0.55; }
+  .chip[aria-pressed='true'] { background: var(--ink); color: var(--white); }
+  @media (hover: hover) {
+    .chip:hover { rotate: -3deg; }
+  }
+
+  /* ── 작품 (메이슨리) ────────────────────── */
+  .works {
+    list-style: none;
+    columns: 3;
+    column-gap: clamp(1rem, 2.5vw, 2.5rem);
+    padding-bottom: clamp(3rem, 8vw, 6rem);
+  }
+  .work {
+    break-inside: avoid;
+    margin-bottom: clamp(1.75rem, 3.5vw, 3rem);
+    transition: opacity var(--dur) linear;
+  }
+  @media (hover: hover) {
+    .works:has(.work:hover) .work:not(:hover) { opacity: 0.45; }
+  }
+  .work-btn { display: block; width: 100%; text-align: left; }
+  .media {
+    position: relative;
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    background: var(--c);
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .media :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .media-ph {
+    position: absolute;
+    left: 0.9rem;
+    top: 0.9rem;
+    color: var(--white);
+    opacity: 0.75;
+  }
+  @media (hover: hover) {
+    .work-btn:hover .media { transform: scale(0.98); }
+  }
+  .work-meta {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+  }
+  .work-title { font-size: var(--fs-body); font-weight: var(--w-title); letter-spacing: -0.01em; }
+  .work:global(.is-active) .work-title { color: var(--red); }
+
+  @media (max-width: 1000px) { .works { columns: 2; } }
+  @media (max-width: 560px)  { .works { columns: 1; } }
+
+  /* ── 크게 보기 ───────────────────────────── */
+  .viewer {
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    padding: 0;
+    background: color-mix(in oklab, var(--ink) 92%, transparent);
+    color: var(--white);
+    display: none;
+    flex-direction: column;
+  }
+  .viewer[open] { display: flex; }
+  .viewer::backdrop { background: transparent; }
+  .viewer-stage {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    padding: clamp(1rem, 4vw, 3rem);
+    padding-top: max(clamp(1rem, 4vw, 3rem), env(safe-area-inset-top));
+  }
+  /* 화면 안에 비율 그대로 꽉 차게: 폭과 (높이×비율) 중 작은 쪽 */
+  .viewer-stage :global(.media) {
+    width: min(100%, calc((100dvh - 9rem) * var(--r)));
+  }
+  .viewer-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem 2rem;
+    padding: 1rem var(--gutter) calc(1rem + env(safe-area-inset-bottom));
+    border-top: 1px solid color-mix(in oklab, var(--white) 25%, transparent);
+  }
+  .viewer-ctrl { display: flex; gap: 0.5rem; }
+  .viewer-ctrl button { min-height: 2.75rem; padding: 0 0.9rem; }
+  @media (hover: hover) { .viewer-ctrl button:hover { color: var(--red); } }
 </style>

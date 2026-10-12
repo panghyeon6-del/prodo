@@ -11,8 +11,21 @@
 - `src/lib/site.ts` — 페이지 목록(ROUTES). 내비·푸터·숫자키 단축키가 모두 여기서 읽음. 링크는 반드시 `url()` 로 감쌀 것(배포 하위 경로 대응)
 - `src/layouts/Base.astro` — ClientRouter(페이지 전환), Nav, Footer, 모션 런타임
 - `src/scripts/motion.ts` — Lenis + GSAP ScrollTrigger. `astro:page-load` 에서 초기화, `astro:before-swap` 에서 정리. 페이지별 애니메이션은 `motion:ready` 이벤트에서 등록(gsap.context 안에서 실행되어 자동 정리됨)
-- `[data-reveal]` — 스크롤 진입 시 올라오며 나타남
-- `src/components/Placeholder.astro` — 사진 자리. `ratio` 로 레이아웃 밀림 방지. 사진은 나중에 `astro:assets` `<Image>` 로 교체
+- `[data-reveal]` — 스크롤 진입 시 올라오며 나타남 / `svg[data-draw]` — 선이 그려짐
+- `[data-dark]` — 어두운 면: 커스텀 커서가 흰색으로 바뀜 / `data-cursor-label` — 커서 옆 라벨
+- `src/components/Doodle.astro` — 손그림 SVG(circle·underline·arrow·star·squiggle·cross·burst·hatch). `#boil` 필터로 선이 떨림. 부모에서 크기 지정 시 `.부모 :global(.클래스)` 로 쓸 것(스코프 스타일이 자식 컴포넌트에 안 닿음)
+- `src/data/portfolio.ts` — 작품 목록. `image` 를 넣으면 박스 대신 사진, 키컬러는 이미지 평균색으로 자동
+- `src/data/milestone.ts` — 현재 마일스톤 하나. NOW 위치는 브라우저에서 오늘 날짜로 계산
+
+## 페이지 = 기능 하나
+- 랜딩: 비주얼만. 빨간 네모(대표 이미지) 던지기, 글자 반응, 시계·좌표. 푸터 없음
+- 소개: 격자를 부수는 거대한 대표 이미지(.big) — 사진 교체 지점
+- 포트폴리오: 메이슨리 + 필터 + 크게 보기. 활성 작품 색이 배경에 번지고 `--key` 가 물듦
+- 마일스톤: 가로 계획표 + NOW
+- 홈 버튼 = 내비 왼쪽 빨간 네모 (나중에 대표 이미지로 교체: `.home-square`)
+
+## 검증
+- 375 / 390 / 768 / 1024 / 1440 / 1920 + 가로 폰(844×390) 에서 가로 스크롤 없을 것
 
 ## 디자인 규칙 (src/styles/tokens.css)
 - 서체: Pretendard 단독(self-host, 동적 서브셋). 세리프는 이탤릭 포인트 한두 낱말에만

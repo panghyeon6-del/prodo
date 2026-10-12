@@ -1,26 +1,31 @@
 ---
-import { ROUTES, SITE, url } from '../lib/site';
+import { SITE } from '../lib/site';
 ---
 
-<footer class="foot">
+<footer class="foot wrap">
   <span class="t-label"><span class="dash">{SITE.name}</span> {SITE.year}</span>
-  <nav class="foot-nav" aria-label="푸터 링크">
-    {ROUTES.map((r) => <a class="t-label" href={url(r.path)}>{r.no} {r.label}</a>)}
-  </nav>
-  <span class="t-label t-muted">Press 0–3 to move</span>
+  <span class="t-label t-muted keys">Keys <kbd>0</kbd><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span>
 </footer>
 
 <style>
   .foot {
     display: flex;
     flex-wrap: wrap;
-    gap: 1rem 2rem;
+    gap: 0.75rem 2rem;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem var(--gutter);
+    padding-block: 1.5rem calc(1.5rem + env(safe-area-inset-bottom));
     border-top: 1px solid var(--line);
   }
-  .foot-nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
-  .foot-nav a { transition: color var(--dur-fast); }
-  .foot-nav a:hover { color: var(--red); }
+  kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.6em;
+    margin-left: 0.4em;
+    padding: 0.1em 0.3em;
+    border: 1px solid currentColor;
+    font: inherit;
+    letter-spacing: 0;
+  }
+  @media (hover: none) { .keys { display: none; } }
 </style>

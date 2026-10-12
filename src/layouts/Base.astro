@@ -9,29 +9,50 @@ interface Props {
   route: Route['key'];
   title?: string;
   description?: string;
+  footer?: boolean;
 }
-const { route, title, description = SITE.tagline } = Astro.props;
-const pageTitle = title ? `${title} — ${SITE.mark}` : `${SITE.mark} ${SITE.name}`;
+const { route, title, description = SITE.tagline, footer = true } = Astro.props;
+const pageTitle = title ? `${title} — ${SITE.name}` : SITE.name;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 
 <!doctype html>
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content={description} />
     <meta name="theme-color" content="#dcdad5" />
-    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/favicon.svg`} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
     <title>{pageTitle}</title>
     <ClientRouter fallback="swap" />
   </head>
   <body data-route={route}>
-    <a class="skip sr-only" href="#main">본문으로 건너뛰기</a>
+    <a class="skip" href="#main">본문으로 건너뛰기</a>
+
+    <!-- 두들 선 떨림 필터 (seed 를 바꿔가며 손으로 다시 그린 듯 흔들림) -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+      <filter id="boil" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="1" result="n">
+          <animate attributeName="seed" values="1;4;7;2" dur="0.6s" calcMode="discrete" repeatCount="indefinite" />
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="3" />
+      </filter>
+    </svg>
+
     <Nav current={route} />
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    {footer && <Footer />}
+
+    <div class="cursor" aria-hidden="true" transition:persist="cursor">
+      <span class="cursor-cross"></span>
+      <span class="cursor-label"></span>
+    </div>
+
     <script>
       import '../scripts/motion';
     </script>
@@ -39,12 +60,23 @@ const pageTitle = title ? `${title} — ${SITE.mark}` : `${SITE.mark} ${SITE.nam
 </html>
 
 <style is:global>
-  /* 페이지 전환: 새 페이지가 아래에서 위로 닦이듯 덮는다 (nav 는 persist 로 고정) */
+  .skip {
+    position: fixed;
+    left: 1rem;
+    top: -4rem;
+    z-index: 300;
+    padding: 0.75rem 1rem;
+    background: var(--ink);
+    color: var(--white);
+  }
+  .skip:focus { top: 1rem; }
+
+  /* 페이지 전환: 새 페이지가 아래에서 위로 닦이듯 덮는다 (nav 는 고정) */
   ::view-transition-old(root) {
     animation: vt-out 420ms var(--ease-in-out) both;
   }
   ::view-transition-new(root) {
-    animation: vt-in 620ms var(--ease-out) both;
+    animation: vt-in 640ms var(--ease-out) both;
   }
   @keyframes vt-out {
     to { opacity: 0.4; transform: translateY(-3vh); }
