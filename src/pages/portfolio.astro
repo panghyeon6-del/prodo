@@ -9,8 +9,13 @@ import { getRoute } from '../lib/site';
 import { TYPES, WORKS } from '../data/portfolio';
 
 const route = getRoute('portfolio');
-const ratio = (r: string) => { const [a, b] = r.split('/').map(Number); return a / b; };
 const count = (k: string) => (k === 'all' ? WORKS.length : WORKS.filter((w) => w.type === k).length);
+const types = TYPES.filter((t) => count(t.key) > 0);
+const items = WORKS.map((w) => {
+  const [a, b] = w.image ? [w.image.width, w.image.height] : (w.ratio ?? '4/5').split('/').map(Number);
+  const widths = w.image ? [...[400, 800, 1200].filter((x) => x < w.image!.width), w.image.width] : [];
+  return { ...w, ar: `${a}/${b}`, r: a / b, widths, color: w.color ?? '#b5b0a8' };
+});
 ---
 
 <Base route="portfolio" title="Portfolio">
@@ -29,7 +34,7 @@ const count = (k: string) => (k === 'all' ? WORKS.length : WORKS.filter((w) => w
       </h1>
 
       <div class="filters" role="group" aria-label="종류별 보기">
-        {TYPES.map((t, i) => (
+        {types.map((t, i) => (
           <button class="chip t-label" data-filter={t.key} aria-pressed={i === 0 ? 'true' : 'false'}>
             {t.label}<span class="chip-n">{count(t.key)}</span>
           </button>
@@ -38,23 +43,23 @@ const count = (k: string) => (k === 'all' ? WORKS.length : WORKS.filter((w) => w
     </header>
 
     <ul class="works wrap" data-works>
-      {WORKS.map((w, i) => (
+      {items.map((w, i) => (
         <li class="work" data-type={w.type} data-color={w.color}>
           <button class="work-btn" data-open={i} data-cursor-label="View"
                   aria-label={`${w.title} 크게 보기`}>
-            <span class="media" style={`aspect-ratio:${w.ratio}; --c:${w.color}; --r:${ratio(w.ratio).toFixed(4)}`}>
+            <span class="media" style={`aspect-ratio:${w.ar}; --c:${w.color}; --r:${w.r.toFixed(4)}`}>
               {w.image ? (
-                <Image src={w.image} alt="" widths={[480, 800, 1200]}
-                       sizes="(max-width: 560px) 100vw, (max-width: 1000px) 50vw, 33vw" loading="lazy" />
+                <Image src={w.image} alt={w.title} widths={w.widths}
+                       sizes="(max-width: 560px) 100vw, (max-width: 1000px) 50vw, 33vw" loading={i < 3 ? 'eager' : 'lazy'} />
               ) : (
-                <span class="t-label media-ph">{w.type} — {w.ratio}</span>
+                <span class="t-label media-ph">{w.type} — {w.ar}</span>
               )}
             </span>
           </button>
           <div class="work-meta">
             <span class="t-label">{String(i + 1).padStart(2, '0')}</span>
             <h2 class="work-title">{w.title}</h2>
-            <span class="t-label t-muted">{w.type} / {w.year}</span>
+            <span class="t-label t-muted">{w.type}{w.year && ` / ${w.year}`}</span>
           </div>
         </li>
       ))}
@@ -315,7 +320,7 @@ const count = (k: string) => (k === 'all' ? WORKS.length : WORKS.filter((w) => w
     width: 100%;
     overflow: hidden;
     background: var(--c);
-    transition: transform var(--dur) var(--ease-out);
+    transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) var(--ease-out);
   }
   .media :global(img) { width: 100%; height: 100%; object-fit: cover; }
   .media-ph {
@@ -326,7 +331,8 @@ const count = (k: string) => (k === 'all' ? WORKS.length : WORKS.filter((w) => w
     opacity: 0.75;
   }
   @media (hover: hover) {
-    .work-btn:hover .media { transform: scale(0.98); }
+    .work:nth-child(odd) .work-btn:hover .media { transform: rotate(-1.6deg) scale(1.02); }
+    .work:nth-child(even) .work-btn:hover .media { transform: rotate(1.6deg) scale(1.02); }
   }
   .work-meta {
     display: grid;

@@ -8,7 +8,7 @@ export const SITE = {
 };
 
 export type Route = {
-  key: 'home' | 'about' | 'portfolio' | 'milestone';
+  key: 'home' | 'portfolio' | 'milestone';
   no: string;
   label: string;
   ko: string;
@@ -16,12 +16,17 @@ export type Route = {
   sub: string;
 };
 
-// 홈(00)은 내비 타일에 나오지 않는다 — 왼쪽 빨간 네모가 홈 버튼.
+// 홈 = 소개(About). 내비 타일에 나오지 않는다 — 왼쪽 빨간 네모가 홈 버튼.
 export const ROUTES: Route[] = [
-  { key: 'home',      no: '00', label: 'Home',      ko: '홈',       path: '/',          sub: 'Track / Reflect / Build / Repeat' },
-  { key: 'about',     no: '01', label: 'About',     ko: '소개',     path: '/about',     sub: 'Values / Habits / Mindset' },
-  { key: 'portfolio', no: '02', label: 'Portfolio', ko: '포트폴리오', path: '/portfolio', sub: 'Drawing / Photo / Film' },
-  { key: 'milestone', no: '03', label: 'Milestone', ko: '마일스톤',  path: '/milestone', sub: 'Goals / Progress / Next' },
+  { key: 'home',      no: '00', label: 'About',     ko: '소개',     path: '/',          sub: 'Better / Clearer / Further' },
+  { key: 'portfolio', no: '01', label: 'Portfolio', ko: '포트폴리오', path: '/portfolio', sub: 'Drawing / Animation' },
+  { key: 'milestone', no: '02', label: 'Milestone', ko: '마일스톤',  path: '/milestone', sub: 'Goals / Progress / Next' },
+];
+
+export const CONTACTS = [
+  { label: 'Email', value: 'hello@example.com', href: 'mailto:hello@example.com', copy: true },
+  { label: 'Instagram', value: '@username', href: 'https://instagram.com/' },
+  { label: 'YouTube', value: '@channel', href: 'https://youtube.com/' },
 ];
 
 export const NAV_ROUTES = ROUTES.filter((r) => r.key !== 'home');

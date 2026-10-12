@@ -4,6 +4,7 @@
 // 빌드 시점 값으로 먼저 그리고, 브라우저에서 오늘 날짜로 다시 계산한다(정적 사이트라 빌드가 오래돼도 정확).
 import Base from '../layouts/Base.astro';
 import Doodle from '../components/Doodle.astro';
+import Blob from '../components/Blob.astro';
 import { getRoute } from '../lib/site';
 import { MILESTONE as M } from '../data/milestone';
 
@@ -45,6 +46,7 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
       <div class="head-row">
         <h1 class="t-display title">{M.title}</h1>
         <p class="pct" aria-label="진행률">
+          <Blob shape="a" color="var(--yellow)" class="pct-blob" />
           <span data-pct>{Math.round(progress)}</span><span class="pct-unit">%</span>
         </p>
       </div>
@@ -185,7 +187,9 @@ const totalTasks = M.phases.flatMap((p) => p.tasks).length;
     color: var(--red);
     font-variant-numeric: tabular-nums;
   }
+  .pct { position: relative; isolation: isolate; }
   .pct-unit { font-size: 0.4em; vertical-align: top; margin-left: 0.05em; }
+  .pct :global(.pct-blob) { position: absolute; z-index: -1; width: 1.25em; left: -0.2em; top: -0.25em; opacity: 0.8; }
   .sub { align-items: flex-start; }
   .summary { font-size: var(--fs-lead); max-width: 28em; line-height: 1.4; }
   .facts {

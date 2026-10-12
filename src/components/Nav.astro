@@ -86,9 +86,9 @@ const { current } = Astro.props;
   .tiles {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     height: 100%;
-    width: min(42rem, 60vw);
+    width: min(28rem, 50vw);
   }
   .tile {
     position: relative;
@@ -137,6 +137,6 @@ const { current } = Astro.props;
   }
   @media (max-width: 420px) {
     .tile-no { display: none; }
-    .tile-label { font-size: 0.6875rem; letter-spacing: 0.04em; }
+    .tile-label { letter-spacing: 0.08em; }
   }
 </style>

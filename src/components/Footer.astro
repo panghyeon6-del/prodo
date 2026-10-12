@@ -1,10 +1,14 @@
 ---
 import { SITE } from '../lib/site';
+import Stripe from './Stripe.astro';
 ---
 
-<footer class="foot wrap">
-  <span class="t-label"><span class="dash">{SITE.name}</span> {SITE.year}</span>
-  <span class="t-label t-muted keys">Keys <kbd>0</kbd><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span>
+<footer class="foot-wrap">
+  <div class="foot wrap">
+    <span class="t-label"><span class="dash">{SITE.name}</span> {SITE.year}</span>
+    <span class="t-label t-muted keys">Keys <kbd>0</kbd><kbd>1</kbd><kbd>2</kbd></span>
+  </div>
+  <Stripe />
 </footer>
 
 <style>
@@ -14,7 +18,7 @@ import { SITE } from '../lib/site';
     gap: 0.75rem 2rem;
     justify-content: space-between;
     align-items: center;
-    padding-block: 1.5rem calc(1.5rem + env(safe-area-inset-bottom));
+    padding-block: 1.5rem;
     border-top: 1px solid var(--line);
   }
   kbd {

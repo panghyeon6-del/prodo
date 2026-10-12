@@ -1,0 +1,16 @@
+---
+// 빨강·노랑·초록 삼색 띠 — 손 그림 하단에서 가져온 서명 장치. 페이지 맨 아래에 반복.
+---
+
+<div class="stripe" aria-hidden="true"><span></span><span></span><span></span></div>
+
+<style>
+  .stripe {
+    display: grid;
+    grid-template-rows: repeat(3, 5px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  span:nth-child(1) { background: var(--red); }
+  span:nth-child(2) { background: var(--yellow); }
+  span:nth-child(3) { background: var(--green); }
+</style>
