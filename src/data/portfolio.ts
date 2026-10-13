@@ -58,7 +58,6 @@ export const WORKS: Work[] = [
   w('freelancer-type', 'Freelancer — Type', 'poster', '글리치로 깨진 FREELANCER.'),
   w('freelancer', 'Freelancer', 'poster', '우주 탐사사의 미래. Pack it light.', 'top'),
   w('seolmundae-halmang', '설문대할망', 'concept', '바다에서 걸어 나오는 거인과 작은 탐사대.'),
-  w('seolmundae-halmang-2', '설문대할망 II', 'concept', '같은 장면의 다른 색.'),
   w('lack-of-love-yes', 'Lack of Love — Yes', 'poster', '붉은 줄무늬 뒤의 얼굴.', 'top'),
   w('lack-of-love-no', 'Lack of Love — No', 'poster', 'I really need someone who need me.', 'top'),
   w('hellow', 'Hellow', 'illustration', '화면을 향해 활짝 편 손바닥.', 'top'),
