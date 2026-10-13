@@ -11,7 +11,7 @@ export default defineConfig({
 
   // 소개 페이지는 홈으로 합쳐짐 — 예전 주소로 들어와도 홈으로
   redirects: {
-    '/about': '/',
+    '/about': `${(process.env.BASE_PATH ?? '').replace(/\/$/, '')}/`,
   },
 
   // 링크에 마우스를 올리면 다음 페이지를 미리 받아둔다 → 이동이 즉시 일어난다

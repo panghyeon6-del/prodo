@@ -23,10 +23,11 @@ export const ROUTES: Route[] = [
   { key: 'milestone', no: '02', label: 'Milestone', ko: '마일스톤',  path: '/milestone', sub: 'Goals / Progress / Next' },
 ];
 
-export const CONTACTS = [
-  { label: 'Email', value: 'hello@example.com', href: 'mailto:hello@example.com', copy: true },
-  { label: 'Instagram', value: '@username', href: 'https://instagram.com/' },
-  { label: 'YouTube', value: '@channel', href: 'https://youtube.com/' },
+// 연락처. 계정이 생기면 아래 주석을 풀어 한 줄씩 추가한다.
+export const CONTACTS: { label: string; value: string; href: string; copy?: boolean }[] = [
+  { label: 'Email', value: 'panghyeon6@gmail.com', href: 'mailto:panghyeon6@gmail.com', copy: true },
+  // { label: 'Instagram', value: '@아이디', href: 'https://instagram.com/아이디' },
+  // { label: 'YouTube', value: '@채널', href: 'https://youtube.com/@채널' },
 ];
 
 // 랜딩 가운데 대표 비주얼.
