@@ -1,22 +1,17 @@
 // 포트폴리오 목록. 그림을 추가하려면:
-//   1) src/assets/works/ 에 파일을 넣고
-//   2) 아래에 import 한 뒤 WORKS 에 한 줄 추가.
+//   1) src/assets/works/ 에 파일을 넣고 (긴 변 2400px 정도면 충분)
+//   2) WORKS 에 한 줄 추가 — image 는 파일 이름(확장자 제외)
 // 화면에는 정사각형으로 잘려 보인다. 어느 쪽을 살릴지는 focus(CSS object-position)로 정한다.
-// 키컬러(배경에 번지는 색)는 이미지 평균색으로 자동 계산된다.
 import type { ImageMetadata } from 'astro';
-import love from '../assets/works/love.jpg';
-import hellow from '../assets/works/hellow.jpg';
-import madeInSeoul from '../assets/works/made-in-seoul.jpg';
-import thisChristmas from '../assets/works/this-christmas.jpg';
-import hi from '../assets/works/hi.jpg';
-import what from '../assets/works/what.jpg';
-import boom from '../assets/works/boom.jpg';
-import umbrella from '../assets/works/umbrella.jpg';
-import pressure from '../assets/works/pressure.jpg';
-import dealWith from '../assets/works/deal-with.jpg';
-import iJustNeed from '../assets/works/i-just-need.jpg';
 
-export type WorkType = 'drawing' | 'animation' | 'photo';
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/works/*.jpg', { eager: true });
+const img = (name: string) => {
+  const f = files[`../assets/works/${name}.jpg`];
+  if (!f) throw new Error(`작품 이미지가 없습니다: src/assets/works/${name}.jpg`);
+  return f.default;
+};
+
+export type WorkType = 'concept' | 'character' | 'illustration' | 'poster';
 
 export type Work = {
   title: string;
@@ -30,33 +25,41 @@ export type Work = {
 
 export const TYPES: { key: WorkType | 'all'; label: string; ko: string }[] = [
   { key: 'all', label: 'All', ko: '전체' },
-  { key: 'drawing', label: 'Drawing', ko: '그림' },
-  { key: 'animation', label: 'Animation', ko: '애니메이션' },
-  { key: 'photo', label: 'Photo', ko: '사진' },
+  { key: 'concept', label: 'Concept', ko: '콘셉트 아트' },
+  { key: 'character', label: 'Character', ko: '캐릭터' },
+  { key: 'illustration', label: 'Illustration', ko: '일러스트' },
+  { key: 'poster', label: 'Poster', ko: '포스터' },
 ];
 
-// desc 는 그림에 보이는 것을 바탕으로 적어둔 임시 문장 — 직접 고쳐 쓸 것
+// 제목·설명은 그림에 보이는 것을 바탕으로 적어둔 임시 문장 — 직접 고쳐 쓸 것
+const w = (name: string, title: string, type: WorkType, desc: string, focus?: string): Work =>
+  ({ title, type, desc, image: img(name), focus });
+
 export const WORKS: Work[] = [
-  { title: 'Love', type: 'drawing', image: love,
-    desc: '서로 기댄 두 얼굴 위로 LOVE 가 겹쳐 지나간다. 수채 번짐과 잉크선.' },
-  { title: 'Hellow', type: 'drawing', image: hellow, focus: 'top',
-    desc: '화면을 향해 활짝 편 손바닥. 인사는 가장 짧은 자기소개.' },
-  { title: 'Made in Seoul', type: 'animation', image: madeInSeoul, focus: 'top',
-    desc: '주근깨 얼굴 위에 큰 글자로 찍은 출신지.' },
-  { title: 'This Christmas', type: 'animation', image: thisChristmas, focus: 'top',
-    desc: '털모자를 쓴 아이가 밤하늘의 불빛을 올려다본다.' },
-  { title: 'Hi', type: 'animation', image: hi, focus: 'top',
-    desc: '심드렁한 얼굴로 건네는 인사.' },
-  { title: 'What????', type: 'animation', image: what,
-    desc: '노란 화면과 분홍 바탕, 물음표 네 개.' },
-  { title: 'Boom', type: 'animation', image: boom,
-    desc: '연기와 함께 터지는 빨간 글자.' },
-  { title: 'Umbrella', type: 'animation', image: umbrella,
-    desc: '우산 안쪽에서 올려다본 비 오는 하늘.' },
-  { title: 'Pressure', type: 'animation', image: pressure,
-    desc: '흐린 하늘 아래 무겁게 놓인 한 단어.' },
-  { title: 'What do you have to deal with', type: 'animation', image: dealWith, focus: 'top',
-    desc: '삶에서 견뎌야 하는 것에 대한 질문.' },
-  { title: 'I just need', type: 'animation', image: iJustNeed, focus: 'bottom',
-    desc: '어둠 속에 번지는 불빛과 말이 되지 못한 문장.' },
+  w('eye-street', 'Eye on the Street', 'concept', '버려진 도시의 길 끝, 떠 있는 거대한 눈과 마주 선 사람.'),
+  w('camping-in-the-dark', 'Camping in the Dark', 'poster', '어두운 숲, 모닥불 하나와 도끼를 든 사람.', 'bottom'),
+  w('flare', 'Flare', 'character', '장바구니와 신호탄을 든 생존자.', 'top'),
+  w('yellow-pod', 'Yellow Pod', 'concept', '분홍 풀밭에 박힌 노란 구체와 그 앞의 탐사자.', '70% center'),
+  w('fog-station', 'Fog Station', 'concept', '안개 속 캠핑카, 하늘을 가로지르는 붉은 선.'),
+  w('sky-squid', 'Sky Squid', 'concept', '별 아래 폐허 도시 위를 헤엄치는 붉은 생물.', '30% center'),
+  w('surv', 'SURV', 'concept', '안개 낀 숲, 모닥불 곁의 세 사람.'),
+  w('masked-thin', 'Masked — Thin', 'character', '가면을 쓰고 벗는 인물의 세 단계.'),
+  w('horned', 'Horned', 'character', '푸른 어둠에서 걸어 나오는 뿔 달린 거인.', 'top'),
+  w('masked-heavy', 'Masked — Heavy', 'character', '가면을 쓰고 벗는 인물의 세 단계.'),
+  w('love', 'Love', 'illustration', '서로 기댄 두 얼굴 위로 LOVE 가 겹쳐 지나간다.'),
+  w('holiday-of-hero', 'Holiday of Hero', 'illustration', '이어폰을 꽂은 영웅의 쉬는 날.', 'top'),
+  w('corridor-12', 'Corridor 12', 'concept', '불길 너머의 무언가를 지켜보는 두 사람.'),
+  w('violet-raid', 'Violet Raid', 'concept', '보랏빛 연기 속 전투.'),
+  w('red-hound', 'Red Hound', 'concept', '붉은 폭발과 검은 짐승.'),
+  w('self-portrait', 'Self Portrait', 'illustration', '펜을 든 자화상.', 'top'),
+  w('bob', 'Bob', 'illustration', '흑백 인물 스케치.'),
+  w('rain-field', 'Rain Field', 'concept', '빗속 들판에 쓰러진 기계와 빛나는 나무.'),
+  w('tentacle-shore', 'Tentacle Shore', 'concept', '해변에 박힌 거대한 촉수와 그 아래의 피크닉.', '65% center'),
+  w('freelancer-type', 'Freelancer — Type', 'poster', '글리치로 깨진 FREELANCER.'),
+  w('freelancer', 'Freelancer', 'poster', '우주 탐사사의 미래. Pack it light.', 'top'),
+  w('seolmundae-halmang', '설문대할망', 'concept', '바다에서 걸어 나오는 거인과 작은 탐사대.'),
+  w('seolmundae-halmang-2', '설문대할망 II', 'concept', '같은 장면의 다른 색.'),
+  w('lack-of-love-yes', 'Lack of Love — Yes', 'poster', '붉은 줄무늬 뒤의 얼굴.', 'top'),
+  w('lack-of-love-no', 'Lack of Love — No', 'poster', 'I really need someone who need me.', 'top'),
+  w('hellow', 'Hellow', 'illustration', '화면을 향해 활짝 편 손바닥.', 'top'),
 ];
